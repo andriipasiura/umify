@@ -1,0 +1,16 @@
+/node_modules
+/.pnp
+.pnp.*
+
+/coverage
+
+/.next/
+
+.env
+.env.local
+
+*.tsbuildinfo
+next-env.d.ts
+
+.idea
+.claude
