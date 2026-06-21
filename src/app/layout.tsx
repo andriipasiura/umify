@@ -2,6 +2,7 @@ import './globals.css';
 
 import type { Metadata } from 'next';
 import { JetBrains_Mono, Poppins } from 'next/font/google';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ThemeProvider } from '@/components/theme-provider';
 
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <NuqsAdapter>{children}</NuqsAdapter>
         </ThemeProvider>
       </body>
     </html>

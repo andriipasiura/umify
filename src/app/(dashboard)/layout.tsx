@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
 import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { DashboardHeader } from '@/components/dashboard-header';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { signOutAction } from '@/features/auth/server';
 import { routes } from '@/lib/routes';
 
@@ -29,9 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppSidebar user={user} signOutAction={signOutAction} />
       <SidebarInset>
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
-        </header>
+        <DashboardHeader />
         <div className="flex flex-1 flex-col gap-4 p-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
