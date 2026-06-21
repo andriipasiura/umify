@@ -47,7 +47,7 @@ export const AppSidebar = ({
       <Sidebar collapsible="icon" className={className}>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-0.5 py-1.5">
-            <UmifyMark className="mx-auto" />
+            <UmifyMark className="-translate-x-[2.5px]" />
             <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
               <span className="text-xs font-semibold">UmiFy</span>
               <span className="text-muted-foreground truncate text-xs">Free UML-tool</span>

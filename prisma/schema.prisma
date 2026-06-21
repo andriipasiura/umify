@@ -52,17 +52,26 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+enum Visibility {
+  public
+  private
+}
+
 model Diagram {
-  id        String   @id @default(cuid())
-  title     String
-  ownerId   String
-  version   Int      @default(1)
-  nodes     Json
-  edges     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String     @id @default(cuid())
+  title      String
+  ownerId    String
+  version    Int        @default(1)
+  visibility Visibility @default(private)
+  category   String?
+  tags       String[]   @default([])
+  nodes      Json
+  edges      Json
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
+  @@index([ownerId, visibility])
 }

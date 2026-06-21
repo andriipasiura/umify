@@ -65,7 +65,7 @@ export const NavUser = ({ user, onSignOut, className }: NavUserProps) => (
       </SidebarMenuButton>
     </DropdownMenuTrigger>
     <DropdownMenuContent
-      className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+      className="mx-2 w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
       side="top"
       align="end"
       sideOffset={4}
