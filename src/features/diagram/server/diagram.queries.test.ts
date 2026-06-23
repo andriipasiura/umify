@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { SAMPLE_DIAGRAMS } from '../lib/sample-diagrams';
 import { type DiagramFilters } from '../search/diagram-filters';
 import { type DiagramCardData } from '../types';
 import { getDiagramsList, listMyTags } from './diagram.queries';
@@ -25,6 +24,7 @@ const ownDiagram: DiagramCardData = {
   visibility: 'private',
   category: null,
   tags: ['auth'],
+  isFavorite: false,
   updatedAt: new Date('2026-06-01T00:00:00.000Z'),
 };
 
@@ -46,19 +46,16 @@ describe('getDiagramsList', () => {
       diagrams: [ownDiagram],
       shownCount: 1,
       totalCount: 3,
-      usingSampleData: false,
     });
   });
 
-  test('falls back to sample data when the owner has no diagrams', async () => {
+  test('returns empty diagrams when owner has none', async () => {
     findByOwner.mockResolvedValue([]);
     countByOwner.mockResolvedValue(0);
 
     const result = await getDiagramsList(filters);
 
-    expect(result.usingSampleData).toBe(true);
-    expect(result.diagrams).toEqual([...SAMPLE_DIAGRAMS]);
-    expect(result.totalCount).toBe(SAMPLE_DIAGRAMS.length);
+    expect(result).toEqual({ diagrams: [], shownCount: 0, totalCount: 0 });
   });
 
   test('rejects when unauthenticated', async () => {
@@ -78,10 +75,8 @@ describe('listMyTags', () => {
     await expect(listMyTags()).resolves.toEqual(['auth', 'login']);
   });
 
-  test('falls back to sample tags when the owner has none', async () => {
+  test('returns empty array when owner has no tags', async () => {
     distinctTags.mockResolvedValue([]);
-    const tags = await listMyTags();
-    expect(tags).toContain('auth');
-    expect(tags.length).toBeGreaterThan(0);
+    await expect(listMyTags()).resolves.toEqual([]);
   });
 });

@@ -3,9 +3,27 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { type DiagramFilters } from '../search/diagram-filters';
 import { diagramRepository } from './diagram.repository';
 
-const { findMany, count } = vi.hoisted(() => ({ findMany: vi.fn(), count: vi.fn() }));
+const { findMany, count, findUnique, create, update, deleteOne } = vi.hoisted(() => ({
+  findMany: vi.fn(),
+  count: vi.fn(),
+  findUnique: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+  deleteOne: vi.fn(),
+}));
 
-vi.mock('@/lib/db', () => ({ db: { diagram: { findMany, count } } }));
+vi.mock('@/lib/db', () => ({
+  db: {
+    diagram: {
+      findMany,
+      count,
+      findUnique,
+      create,
+      update,
+      delete: deleteOne,
+    },
+  },
+}));
 
 const baseFilters: DiagramFilters = {
   search: '',
@@ -81,5 +99,59 @@ describe('diagramRepository.distinctTags', () => {
       where: { ownerId: 'owner_1' },
       select: { tags: true },
     });
+  });
+});
+
+describe('diagramRepository.create', () => {
+  beforeEach(() => {
+    create.mockReset().mockResolvedValue({ id: 'new-id' });
+  });
+
+  test('creates with ownerId and empty nodes/edges', async () => {
+    await diagramRepository.create('owner_1', {
+      title: 'New Diagram',
+      category: null,
+      tags: [],
+      visibility: 'private',
+    });
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          ownerId: 'owner_1',
+          title: 'New Diagram',
+          nodes: [],
+          edges: [],
+        }),
+      }),
+    );
+  });
+});
+
+describe('diagramRepository.setFavorite', () => {
+  beforeEach(() => {
+    update.mockReset().mockResolvedValue({ id: 'd1', isFavorite: true });
+  });
+
+  test('updates the isFavorite field', async () => {
+    await diagramRepository.setFavorite('d1', true);
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'd1' },
+        data: { isFavorite: true },
+      }),
+    );
+  });
+});
+
+describe('diagramRepository.remove', () => {
+  beforeEach(() => {
+    deleteOne.mockReset().mockResolvedValue({ id: 'd1' });
+  });
+
+  test('deletes by id', async () => {
+    await diagramRepository.remove('d1');
+    expect(deleteOne).toHaveBeenCalledWith({ where: { id: 'd1' } });
   });
 });

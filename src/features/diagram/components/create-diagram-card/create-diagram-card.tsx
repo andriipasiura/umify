@@ -6,16 +6,18 @@ const TITLE = 'Create Diagram';
 const SUBTITLE = 'Start a new use case diagram from a blank canvas';
 
 type CreateDiagramCardProps = {
+  onClick?: () => void;
   className?: string;
 };
 
-export const CreateDiagramCard = ({ className }: CreateDiagramCardProps) => (
+export const CreateDiagramCard = ({ onClick, className }: CreateDiagramCardProps) => (
   <button
     type="button"
-    disabled
+    onClick={onClick}
+    disabled={!onClick}
     aria-label={TITLE}
     className={cn(
-      'group/card text-card-foreground border-border flex h-full min-h-52 flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-6 text-center transition-colors',
+      'group/card text-card-foreground border-border flex h-full min-h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-6 text-center transition-colors',
       'hover:border-primary hover:bg-accent/40 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
       'disabled:cursor-not-allowed',
       className,

@@ -12,6 +12,7 @@ const DIAGRAM_CARD_SELECT = {
   visibility: true,
   category: true,
   tags: true,
+  isFavorite: true,
   updatedAt: true,
 } satisfies Prisma.DiagramSelect;
 
@@ -24,19 +25,15 @@ const buildWhere = (ownerId: string, filters: DiagramFilters): Prisma.DiagramWhe
   ...(filters.tags.length > 0 && { tags: { hasSome: filters.tags } }),
 });
 
-const buildOrderBy = (sort: DiagramFilters['sort']): Prisma.DiagramOrderByWithRelationInput => {
-  switch (sort) {
-    case 'oldest':
-      return { createdAt: 'asc' };
-    case 'title':
-      return { title: 'asc' };
-    case 'title-desc':
-      return { title: 'desc' };
-    case 'recent':
-    default:
-      return { updatedAt: 'desc' };
-  }
-};
+const SORT_ORDERS = {
+  recent: { updatedAt: 'desc' },
+  oldest: { createdAt: 'asc' },
+  title: { title: 'asc' },
+  'title-desc': { title: 'desc' },
+} as const satisfies Record<DiagramFilters['sort'], Prisma.DiagramOrderByWithRelationInput>;
+
+const buildOrderBy = (sort: DiagramFilters['sort']): Prisma.DiagramOrderByWithRelationInput =>
+  SORT_ORDERS[sort];
 
 export const diagramRepository = {
   findByOwner: (ownerId: string, filters: DiagramFilters) =>
@@ -55,4 +52,36 @@ export const diagramRepository = {
     });
     return [...new Set(rows.flatMap((row) => row.tags))].sort();
   },
+
+  findOwner: (id: string) =>
+    db.diagram.findUnique({ where: { id }, select: { ownerId: true, isFavorite: true } }),
+
+  create: (
+    ownerId: string,
+    data: {
+      title: string;
+      category: string | null;
+      tags: string[];
+      visibility: 'public' | 'private';
+    },
+  ) =>
+    db.diagram.create({
+      data: { ...data, ownerId, nodes: [], edges: [] },
+      select: DIAGRAM_CARD_SELECT,
+    }),
+
+  updateMeta: (
+    id: string,
+    data: {
+      title: string;
+      category: string | null;
+      tags: string[];
+      visibility: 'public' | 'private';
+    },
+  ) => db.diagram.update({ where: { id }, data, select: DIAGRAM_CARD_SELECT }),
+
+  remove: (id: string) => db.diagram.delete({ where: { id } }),
+
+  setFavorite: (id: string, isFavorite: boolean) =>
+    db.diagram.update({ where: { id }, data: { isFavorite }, select: DIAGRAM_CARD_SELECT }),
 };

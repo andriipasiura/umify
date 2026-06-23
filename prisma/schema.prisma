@@ -65,6 +65,7 @@ model Diagram {
   visibility Visibility @default(private)
   category   String?
   tags       String[]   @default([])
+  isFavorite Boolean    @default(false)
   nodes      Json
   edges      Json
   createdAt  DateTime   @default(now())
