@@ -6,5 +6,6 @@ export type DiagramCardData = {
   visibility: Visibility;
   category: string | null;
   tags: string[];
+  isFavorite: boolean;
   updatedAt: Date;
 };

@@ -2,7 +2,8 @@ import { type SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
 import { PageHeader } from '@/components/page-header';
-import { DiagramFilters, DiagramGrid, DiagramListSkeleton } from '@/features/diagram/client';
+import { Show } from '@/components/utils/show';
+import { DiagramBoard, DiagramFilters, DiagramListSkeleton } from '@/features/diagram/client';
 import { getDiagramsList, listMyTags, loadDiagramFilters } from '@/features/diagram/server';
 
 const HEADING = 'My Diagrams';
@@ -40,10 +41,12 @@ const DiagramsResolver = async ({ filters }: DiagramsResolverProps) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-muted-foreground text-sm">
-        Showing {shownCount} of {totalCount} diagrams
-      </p>
-      <DiagramGrid diagrams={diagrams} />
+      <Show when={totalCount > 0}>
+        <p className="text-muted-foreground text-sm">
+          Showing {shownCount} of {totalCount} diagrams
+        </p>
+      </Show>
+      <DiagramBoard diagrams={diagrams} />
     </div>
   );
 };

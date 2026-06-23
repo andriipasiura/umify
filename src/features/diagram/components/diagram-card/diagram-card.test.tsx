@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
 
 import { type DiagramCardData } from '@/features/diagram/types';
 
@@ -11,6 +12,7 @@ const diagram: DiagramCardData = {
   visibility: 'public',
   category: 'web app',
   tags: ['auth', 'login'],
+  isFavorite: false,
   updatedAt: new Date('2026-06-01T00:00:00.000Z'),
 };
 
@@ -33,5 +35,34 @@ describe('DiagramCard', () => {
   test('exposes an actions trigger labelled by the diagram title', () => {
     render(<DiagramCard diagram={diagram} />);
     expect(screen.getByRole('button', { name: 'Actions for Login Flow' })).toBeInTheDocument();
+  });
+
+  test('calls onEdit when provided via the actions menu', async () => {
+    const onEdit = vi.fn();
+    const user = userEvent.setup();
+    render(<DiagramCard diagram={diagram} onEdit={onEdit} />);
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Login Flow' }));
+    await user.click(screen.getByText('Edit'));
+    expect(onEdit).toHaveBeenCalled();
+  });
+
+  test('shows filled star when isFavorite is true', () => {
+    render(<DiagramCard diagram={{ ...diagram, isFavorite: true }} />);
+    expect(screen.getByRole('button', { name: 'Remove from favorites' })).toBeInTheDocument();
+  });
+
+  test('calls onToggleFavorite when the star button is clicked', async () => {
+    const onToggleFavorite = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DiagramCard
+        diagram={{ ...diagram, isFavorite: true }}
+        onToggleFavorite={onToggleFavorite}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Remove from favorites' }));
+    expect(onToggleFavorite).toHaveBeenCalled();
   });
 });

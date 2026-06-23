@@ -1,3 +1,5 @@
+import { Star } from 'lucide-react';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Show } from '@/components/utils/show';
@@ -11,6 +13,9 @@ import { DiagramTagList } from '../diagram-tag-list';
 
 type DiagramCardProps = {
   diagram: DiagramCardData;
+  onEdit?: () => void;
+  onToggleFavorite?: () => void;
+  onDelete?: () => void;
   className?: string;
 };
 
@@ -24,7 +29,13 @@ const VISIBILITY_VARIANT: Record<DiagramCardData['visibility'], 'secondary' | 'o
   private: 'outline',
 };
 
-export const DiagramCard = ({ diagram, className }: DiagramCardProps) => (
+export const DiagramCard = ({
+  diagram,
+  onEdit,
+  onToggleFavorite,
+  onDelete,
+  className,
+}: DiagramCardProps) => (
   <Card
     className={cn(
       'hover:border-primary gap-0 border border-transparent py-0 transition-colors',
@@ -33,7 +44,30 @@ export const DiagramCard = ({ diagram, className }: DiagramCardProps) => (
   >
     <div className="bg-accent/50 relative flex h-28 items-center justify-center">
       <DiagramPreviewMark className="group-hover/card:text-primary/70 h-14 w-20 transition-colors" />
-      <DiagramCardActions diagramTitle={diagram.title} className="absolute top-2 right-2" />
+      <DiagramCardActions
+        diagramTitle={diagram.title}
+        isFavorite={diagram.isFavorite}
+        onEdit={onEdit}
+        onToggleFavorite={onToggleFavorite}
+        onDelete={onDelete}
+        className="absolute top-2 right-2"
+      />
+      <Show when={diagram.isFavorite || !!onToggleFavorite}>
+        <button
+          type="button"
+          aria-label={diagram.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          onClick={onToggleFavorite}
+          disabled={!onToggleFavorite}
+          className={cn(
+            'absolute top-2 left-2 inline-flex size-7 items-center justify-center rounded-md transition-opacity',
+            'text-muted-foreground hover:text-foreground focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
+            !diagram.isFavorite && 'opacity-0 group-hover/card:opacity-100',
+            !onToggleFavorite && 'cursor-default',
+          )}
+        >
+          <Star className={cn('size-4', diagram.isFavorite && 'fill-current text-yellow-500')} />
+        </button>
+      </Show>
     </div>
 
     <CardContent className="flex flex-col gap-3 p-4">
