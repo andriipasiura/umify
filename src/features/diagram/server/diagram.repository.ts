@@ -45,6 +45,16 @@ export const diagramRepository = {
 
   countByOwner: (ownerId: string) => db.diagram.count({ where: { ownerId } }),
 
+  findFavoritesByOwner: (ownerId: string, filters: DiagramFilters) =>
+    db.diagram.findMany({
+      where: { ...buildWhere(ownerId, filters), isFavorite: true },
+      orderBy: buildOrderBy(filters.sort),
+      select: DIAGRAM_CARD_SELECT,
+    }),
+
+  countFavoritesByOwner: (ownerId: string) =>
+    db.diagram.count({ where: { ownerId, isFavorite: true } }),
+
   distinctTags: async (ownerId: string): Promise<string[]> => {
     const rows = await db.diagram.findMany({
       where: { ownerId },

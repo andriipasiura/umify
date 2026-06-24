@@ -23,7 +23,15 @@ const optimisticReducer = (diagrams: DiagramCardData[], action: Action): Diagram
   }
 };
 
-export const useDiagramBoard = (initialDiagrams: DiagramCardData[]) => {
+type DiagramBoardOptions = {
+  removeOnUnfavorite?: boolean;
+};
+
+export const useDiagramBoard = (
+  initialDiagrams: DiagramCardData[],
+  options: DiagramBoardOptions = {},
+) => {
+  const { removeOnUnfavorite = false } = options;
   const [optimisticDiagrams, dispatch] = useOptimistic(initialDiagrams, optimisticReducer);
   const [isPending, startTransition] = useTransition();
 
@@ -43,11 +51,14 @@ export const useDiagramBoard = (initialDiagrams: DiagramCardData[]) => {
   const handleToggleFavorite = useCallback(
     (diagram: DiagramCardData) => {
       startTransition(async () => {
-        dispatch({ type: ACTION_TYPES.TOGGLE_FAVORITE, id: diagram.id });
+        dispatch({
+          type: removeOnUnfavorite ? ACTION_TYPES.REMOVE : ACTION_TYPES.TOGGLE_FAVORITE,
+          id: diagram.id,
+        });
         await toggleFavorite(diagram.id);
       });
     },
-    [dispatch],
+    [dispatch, removeOnUnfavorite],
   );
 
   const handleConfirmDelete = useCallback(() => {

@@ -70,6 +70,7 @@ export const updateDiagramMeta = async (
 
   await diagramRepository.updateMeta(id, { ...rest, category: toCategory(category) });
   revalidatePath(routes.diagrams);
+  revalidatePath(routes.favorites);
   return { ok: true, data: { id } };
 };
 
@@ -84,6 +85,7 @@ export const deleteDiagram = async (id: string): Promise<ActionResult> => {
 
   await diagramRepository.remove(id);
   revalidatePath(routes.diagrams);
+  revalidatePath(routes.favorites);
   return { ok: true, data: undefined };
 };
 
@@ -100,5 +102,6 @@ export const toggleFavorite = async (
 
   const updated = await diagramRepository.setFavorite(id, !existing.isFavorite);
   revalidatePath(routes.diagrams);
+  revalidatePath(routes.favorites);
   return { ok: true, data: { isFavorite: updated.isFavorite } };
 };

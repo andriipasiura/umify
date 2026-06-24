@@ -23,6 +23,19 @@ export const getDiagramsList = async (filters: DiagramFilters): Promise<DiagramL
   return { diagrams, shownCount: diagrams.length, totalCount };
 };
 
+export const getFavoriteDiagramsList = async (
+  filters: DiagramFilters,
+): Promise<DiagramListResult> => {
+  const user = await requireUser();
+
+  const [diagrams, totalCount] = await Promise.all([
+    diagramRepository.findFavoritesByOwner(user.id, filters),
+    diagramRepository.countFavoritesByOwner(user.id),
+  ]);
+
+  return { diagrams, shownCount: diagrams.length, totalCount };
+};
+
 export const listMyTags = async (): Promise<string[]> => {
   const user = await requireUser();
   return diagramRepository.distinctTags(user.id);
