@@ -5,6 +5,8 @@ import { JetBrains_Mono, Poppins } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { PreferencesProvider } from '@/features/settings/components/preferences-provider';
+import { readPreferences } from '@/features/settings/server/preferences';
 
 const fontSans = Poppins({
   variable: '--font-sans',
@@ -24,11 +26,14 @@ export const metadata: Metadata = {
   description: 'UmiFy — UML use-case diagram editor',
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const prefs = await readPreferences();
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
+      data-theme={prefs.colorTheme}
       className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
@@ -38,7 +43,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           enableSystem
           disableTransitionOnChange
         >
-          <NuqsAdapter>{children}</NuqsAdapter>
+          <PreferencesProvider initial={prefs}>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </PreferencesProvider>
         </ThemeProvider>
       </body>
     </html>
