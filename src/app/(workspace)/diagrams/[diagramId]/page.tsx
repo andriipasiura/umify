@@ -1,0 +1,24 @@
+import { notFound } from 'next/navigation';
+
+import { DiagramEditor } from '@/features/diagram/client';
+import { getDiagramForEdit } from '@/features/diagram/server';
+
+type DiagramWorkspacePageProps = {
+  params: Promise<{ diagramId: string }>;
+};
+
+export default async function DiagramWorkspacePage({ params }: DiagramWorkspacePageProps) {
+  const { diagramId } = await params;
+
+  const diagram = await getDiagramForEdit(diagramId);
+  if (!diagram) notFound();
+
+  return (
+    <DiagramEditor
+      id={diagram.id}
+      title={diagram.title}
+      nodes={diagram.nodes}
+      edges={diagram.edges}
+    />
+  );
+}

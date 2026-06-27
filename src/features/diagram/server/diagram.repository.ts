@@ -6,6 +6,8 @@ import { db } from '@/lib/db';
 
 import { type DiagramFilters } from '../search/diagram-filters';
 
+type JsonValue = Prisma.InputJsonValue;
+
 const DIAGRAM_CARD_SELECT = {
   id: true,
   title: true,
@@ -94,4 +96,23 @@ export const diagramRepository = {
 
   setFavorite: (id: string, isFavorite: boolean) =>
     db.diagram.update({ where: { id }, data: { isFavorite }, select: DIAGRAM_CARD_SELECT }),
+
+  findContentById: (id: string) =>
+    db.diagram.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        title: true,
+        ownerId: true,
+        visibility: true,
+        version: true,
+        nodes: true,
+        edges: true,
+      },
+    }),
+
+  saveContent: (id: string, data: { nodes: JsonValue; edges: JsonValue }) =>
+    db.diagram.update({ where: { id }, data }),
+
+  rename: (id: string, title: string) => db.diagram.update({ where: { id }, data: { title } }),
 };
