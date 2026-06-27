@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/auth/require-user';
 import { errors } from '@/lib/constants/errors';
 import { routes } from '@/lib/routes';
 
+import { diagramContentSchema } from '../schema/diagram-content';
 import { diagramMetaSchema } from '../schema/diagram-meta';
 import { diagramRepository } from './diagram.repository';
 import { type ActionResult } from './types';
@@ -87,6 +88,51 @@ export const deleteDiagram = async (id: string): Promise<ActionResult> => {
   revalidatePath(routes.diagrams);
   revalidatePath(routes.favorites);
   return { ok: true, data: undefined };
+};
+
+export const saveDiagramContent = async (id: string, payload: unknown): Promise<ActionResult> => {
+  const user = await requireUser();
+
+  if (!id) return { ok: false, error: errors.INVALID_INPUT };
+
+  const parsed = diagramContentSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { ok: false, error: errors.INVALID_INPUT, fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  const existing = await diagramRepository.findOwner(id);
+  if (!existing) return { ok: false, error: errors.NOT_FOUND };
+  if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
+
+  await diagramRepository.saveContent(id, {
+    nodes: parsed.data.nodes,
+    edges: parsed.data.edges,
+  });
+  revalidatePath(routes.diagram(id));
+  return { ok: true, data: undefined };
+};
+
+export const renameDiagram = async (
+  id: string,
+  title: unknown,
+): Promise<ActionResult<{ title: string }>> => {
+  const user = await requireUser();
+
+  if (!id) return { ok: false, error: errors.INVALID_INPUT };
+
+  const parsed = diagramMetaSchema.pick({ title: true }).safeParse({ title });
+  if (!parsed.success) {
+    return { ok: false, error: errors.INVALID_INPUT, fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  const existing = await diagramRepository.findOwner(id);
+  if (!existing) return { ok: false, error: errors.NOT_FOUND };
+  if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
+
+  await diagramRepository.rename(id, parsed.data.title);
+  revalidatePath(routes.diagram(id));
+  revalidatePath(routes.diagrams);
+  return { ok: true, data: { title: parsed.data.title } };
 };
 
 export const toggleFavorite = async (
