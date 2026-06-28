@@ -1,10 +1,4 @@
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  type EdgeProps,
-  getSmoothStepPath,
-  MarkerType,
-} from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, type EdgeProps, getBezierPath } from '@xyflow/react';
 import { memo } from 'react';
 
 import { type UmlEdge as UmlEdgeType, type UmlRelation } from '@/features/diagram/types';
@@ -23,12 +17,11 @@ const DASHED: Record<UmlRelation, boolean> = {
   generalization: false,
 };
 
-const MARKER_END: Record<UmlRelation, string> = {
-  association: MarkerType.Arrow,
-  include: MarkerType.ArrowClosed,
-  extend: MarkerType.ArrowClosed,
-  generalization: MarkerType.ArrowClosed,
-};
+function getMarkerEnd(relation: UmlRelation, selected: boolean): string | undefined {
+  const suffix = selected ? '-selected' : '';
+  if (relation === 'generalization') return `url(#uml-generalization${suffix})`;
+  if (relation === 'include' || relation === 'extend') return `url(#uml-arrow${suffix})`;
+}
 
 export const UmlEdge = memo(
   ({
@@ -42,7 +35,7 @@ export const UmlEdge = memo(
     data,
     selected,
   }: EdgeProps<UmlEdgeType>) => {
-    const [path, labelX, labelY] = getSmoothStepPath({
+    const [path, labelX, labelY] = getBezierPath({
       sourceX,
       sourceY,
       targetX,
@@ -59,10 +52,10 @@ export const UmlEdge = memo(
         <BaseEdge
           id={id}
           path={path}
-          markerEnd={`url(#${MARKER_END[relation]})`}
+          markerEnd={getMarkerEnd(relation, Boolean(selected))}
           style={{
             strokeDasharray: DASHED[relation] ? '6 4' : undefined,
-            stroke: selected ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+            stroke: selected ? 'var(--primary)' : 'var(--foreground)',
             strokeWidth: selected ? 2 : 1.5,
           }}
         />

@@ -16,6 +16,7 @@ export type UmlNodeKind = (typeof UML_NODE_KINDS)[number];
 export const [KIND_ACTOR, KIND_USECASE, KIND_BOUNDARY, KIND_NOTE] = UML_NODE_KINDS;
 
 export const UML_EDGE_TYPE = 'uml' as const;
+export const UML_DND_MIME = 'application/uml-node-kind' as const;
 
 export const UML_RELATIONS = ['association', 'include', 'extend', 'generalization'] as const;
 export type UmlRelation = (typeof UML_RELATIONS)[number];

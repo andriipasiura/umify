@@ -1,39 +1,40 @@
-import { Handle, type NodeProps, NodeResizer, Position } from '@xyflow/react';
+import { type NodeProps, NodeResizer } from '@xyflow/react';
 import { memo } from 'react';
 
+import { NodeInlineLabel } from '@/features/diagram/components/node-inline-label';
+import { useInlineLabel } from '@/features/diagram/hooks/use-inline-label';
 import { type UmlNode } from '@/features/diagram/types';
 import { cn } from '@/lib/utils';
 
-const HANDLE_CLASS =
-  '!size-2 !bg-primary !border-primary opacity-0 group-hover/node:opacity-100 transition-opacity';
+export const BoundaryNode = memo(({ id, data, selected }: NodeProps<UmlNode>) => {
+  const { isEditing, onDoubleClick, inputProps } = useInlineLabel(id, data.label);
 
-export const BoundaryNode = memo(({ data, selected }: NodeProps<UmlNode>) => (
-  <div
-    className={cn(
-      'group/node border-foreground relative flex min-h-40 min-w-60 flex-col rounded-sm border-2',
-      selected ? 'ring-primary ring-2 ring-offset-2' : '',
-    )}
-  >
-    <NodeResizer
-      minWidth={180}
-      minHeight={120}
-      isVisible={selected}
-      lineClassName="!border-primary"
-      handleClassName="!bg-primary !border-primary !size-2.5"
-    />
+  return (
+    <div
+      className={cn(
+        'group/node border-foreground relative flex h-full min-h-40 w-full min-w-60 flex-col rounded-sm border-2',
+        selected ? 'ring-primary/50 ring-1' : '',
+      )}
+    >
+      <NodeResizer
+        minWidth={180}
+        minHeight={120}
+        isVisible={selected}
+        lineClassName="!border-primary"
+        handleClassName="!bg-primary !border-primary !size-1.5"
+      />
 
-    <div className="bg-foreground text-background w-fit rounded-br-sm px-3 py-1 text-xs font-semibold">
-      {data.label}
+      <div className="w-fit px-2 py-0.5">
+        <NodeInlineLabel
+          isEditing={isEditing}
+          label={data.label}
+          onDoubleClick={onDoubleClick}
+          inputProps={inputProps}
+          displayClassName="text-xs font-semibold"
+          inputClassName="w-24 text-xs font-semibold border-b border-primary"
+        />
+      </div>
     </div>
-
-    <Handle type="source" position={Position.Top} id="top" className={HANDLE_CLASS} />
-    <Handle type="source" position={Position.Right} id="right" className={HANDLE_CLASS} />
-    <Handle type="source" position={Position.Bottom} id="bottom" className={HANDLE_CLASS} />
-    <Handle type="source" position={Position.Left} id="left" className={HANDLE_CLASS} />
-    <Handle type="target" position={Position.Top} id="top-t" className={HANDLE_CLASS} />
-    <Handle type="target" position={Position.Right} id="right-t" className={HANDLE_CLASS} />
-    <Handle type="target" position={Position.Bottom} id="bottom-t" className={HANDLE_CLASS} />
-    <Handle type="target" position={Position.Left} id="left-t" className={HANDLE_CLASS} />
-  </div>
-));
+  );
+});
 BoundaryNode.displayName = 'BoundaryNode';
