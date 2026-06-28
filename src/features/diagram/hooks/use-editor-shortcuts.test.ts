@@ -5,8 +5,16 @@ import { useDiagramStore } from '../store/diagram-store';
 import { useEditorStore } from '../store/editor-store';
 import { useEditorShortcuts } from './use-editor-shortcuts';
 
+const toCode = (key: string): string => {
+  if (/^[0-9]$/.test(key)) return `Digit${key}`;
+  if (/^[a-zA-Z]$/.test(key)) return `Key${key.toUpperCase()}`;
+  return key;
+};
+
 const fire = (key: string, opts: Partial<KeyboardEventInit> = {}) => {
-  window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, ...opts }));
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key, code: toCode(key), bubbles: true, ...opts }),
+  );
 };
 
 beforeEach(() => {
