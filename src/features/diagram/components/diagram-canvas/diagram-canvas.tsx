@@ -12,17 +12,26 @@ import {
 } from '@xyflow/react';
 import { useShallow } from 'zustand/react/shallow';
 
+import { DiagramToolbar } from '@/features/diagram/components/diagram-toolbar';
 import { edgeTypes, nodeTypes } from '@/features/diagram/components/diagram-types';
+import { UmlMarkers } from '@/features/diagram/components/uml-markers';
 import { useDiagramInteractions } from '@/features/diagram/hooks/use-diagram-interactions';
 import { isValidFlowConnection } from '@/features/diagram/lib/diagram-canvas-utils';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
 import { useEditorStore } from '@/features/diagram/store/editor-store';
 import { UML_EDGE_TYPE } from '@/features/diagram/types';
 
-import { DiagramToolbar } from '../diagram-toolbar';
-import { UmlMarkers } from '../uml-markers';
+type DiagramCanvasProps = {
+  topLeftPanel?: React.ReactNode;
+  topCenterPanel?: React.ReactNode;
+  topRightPanel?: React.ReactNode;
+};
 
-const DiagramCanvasInner = () => {
+const DiagramCanvasInner = ({
+  topLeftPanel,
+  topCenterPanel,
+  topRightPanel,
+}: DiagramCanvasProps) => {
   const {
     nodes,
     edges,
@@ -95,7 +104,7 @@ const DiagramCanvasInner = () => {
         defaultEdgeOptions={{ type: UML_EDGE_TYPE }}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        proOptions={{ hideAttribution: false }}
+        proOptions={{ hideAttribution: true }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="bg-muted/20" />
         <Panel position="center-left">
@@ -110,13 +119,16 @@ const DiagramCanvasInner = () => {
             canRedo={future.length > 0}
           />
         </Panel>
+        {topLeftPanel && <Panel position="top-left">{topLeftPanel}</Panel>}
+        {topCenterPanel && <Panel position="top-center">{topCenterPanel}</Panel>}
+        {topRightPanel && <Panel position="top-right">{topRightPanel}</Panel>}
       </ReactFlow>
     </div>
   );
 };
 
-export const DiagramCanvas = () => (
+export const DiagramCanvas = (props: DiagramCanvasProps) => (
   <ReactFlowProvider>
-    <DiagramCanvasInner />
+    <DiagramCanvasInner {...props} />
   </ReactFlowProvider>
 );

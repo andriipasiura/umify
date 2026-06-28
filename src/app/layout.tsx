@@ -5,6 +5,7 @@ import { JetBrains_Mono, Poppins } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { PreferencesProvider } from '@/features/settings/components/preferences-provider';
 import { readPreferences } from '@/features/settings/server/preferences';
 
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         >
           <PreferencesProvider initial={prefs}>
             <NuqsAdapter>{children}</NuqsAdapter>
+            <Toaster />
           </PreferencesProvider>
         </ThemeProvider>
       </body>
