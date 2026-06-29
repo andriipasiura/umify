@@ -6,6 +6,7 @@ import {
   Background,
   BackgroundVariant,
   ConnectionMode,
+  MiniMap,
   Panel,
   ReactFlow,
   ReactFlowProvider,
@@ -17,20 +18,23 @@ import { edgeTypes, nodeTypes } from '@/features/diagram/components/diagram-type
 import { UmlMarkers } from '@/features/diagram/components/uml-markers';
 import { useDiagramInteractions } from '@/features/diagram/hooks/use-diagram-interactions';
 import { isValidFlowConnection } from '@/features/diagram/lib/diagram-canvas-utils';
+import { miniMapNodeColor } from '@/features/diagram/lib/minimap-node-color';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
 import { useEditorStore } from '@/features/diagram/store/editor-store';
-import { UML_EDGE_TYPE } from '@/features/diagram/types';
+import { UML_EDGE_TYPE, type UmlNode } from '@/features/diagram/types';
 
 type DiagramCanvasProps = {
   topLeftPanel?: React.ReactNode;
   topCenterPanel?: React.ReactNode;
   topRightPanel?: React.ReactNode;
+  bottomLeftPanel?: React.ReactNode;
 };
 
 const DiagramCanvasInner = ({
   topLeftPanel,
   topCenterPanel,
   topRightPanel,
+  bottomLeftPanel,
 }: DiagramCanvasProps) => {
   const {
     nodes,
@@ -119,9 +123,17 @@ const DiagramCanvasInner = ({
             canRedo={future.length > 0}
           />
         </Panel>
+        <MiniMap
+          pannable
+          zoomable
+          nodeColor={(node) => miniMapNodeColor(node as UmlNode)}
+          className="!bg-background rounded-md border"
+          maskColor="var(--muted)"
+        />
         {topLeftPanel && <Panel position="top-left">{topLeftPanel}</Panel>}
         {topCenterPanel && <Panel position="top-center">{topCenterPanel}</Panel>}
         {topRightPanel && <Panel position="top-right">{topRightPanel}</Panel>}
+        {bottomLeftPanel && <Panel position="bottom-left">{bottomLeftPanel}</Panel>}
       </ReactFlow>
     </div>
   );

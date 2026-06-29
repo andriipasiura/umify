@@ -9,6 +9,7 @@ import { DiagramCanvas } from '@/features/diagram/components/diagram-canvas';
 import { DiagramStatus } from '@/features/diagram/components/diagram-status';
 import { DiagramTitle } from '@/features/diagram/components/diagram-title';
 import { DiagramTopbar } from '@/features/diagram/components/diagram-topbar';
+import { DiagramZoomControlsPanel } from '@/features/diagram/components/diagram-zoom-controls';
 import { useDiagramSave } from '@/features/diagram/hooks/use-diagram-save';
 import { useDiagramTitle } from '@/features/diagram/hooks/use-diagram-title';
 import { useEditorShortcuts } from '@/features/diagram/hooks/use-editor-shortcuts';
@@ -48,6 +49,7 @@ export const DiagramEditor = ({ id, title, nodes, edges }: DiagramEditorProps) =
         <DiagramCanvas
           topLeftPanel={<DiagramStatus status={save.status} onClick={() => save.saveNow()} />}
           topCenterPanel={<DiagramTitle {...diagramTitle} />}
+          bottomLeftPanel={<DiagramZoomControlsPanel />}
           topRightPanel={
             <div className="flex items-center gap-1.5">
               <Button variant="outline" size="sm" disabled>
