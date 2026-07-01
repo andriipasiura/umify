@@ -1,11 +1,12 @@
 'use client';
 
-import { Download, Share2 } from 'lucide-react';
+import { Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DiagramCanvas } from '@/features/diagram/components/diagram-canvas';
+import { DiagramExport } from '@/features/diagram/components/diagram-export';
 import { DiagramStatus } from '@/features/diagram/components/diagram-status';
 import { DiagramTitle } from '@/features/diagram/components/diagram-title';
 import { DiagramTopbar } from '@/features/diagram/components/diagram-topbar';
@@ -56,10 +57,7 @@ export const DiagramEditor = ({ id, title, nodes, edges }: DiagramEditorProps) =
                 <Share2 />
                 Share
               </Button>
-              <Button variant="outline" size="sm" disabled>
-                <Download />
-                Export
-              </Button>
+              <DiagramExport title={diagramTitle.value} />
             </div>
           }
         />
