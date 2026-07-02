@@ -2,7 +2,11 @@ import 'server-only';
 
 import { requireUser } from '@/lib/auth/require-user';
 
-import { diagramContentSchema, EMPTY_DIAGRAM_CONTENT } from '../schema/diagram-content';
+import {
+  type DiagramContent,
+  diagramContentSchema,
+  EMPTY_DIAGRAM_CONTENT,
+} from '../schema/diagram-content';
 import { type DiagramFilters } from '../search/diagram-filters';
 import { type DiagramCardData } from '../types';
 import { diagramRepository } from './diagram.repository';
@@ -48,8 +52,30 @@ export type DiagramForEdit = {
   ownerId: string;
   visibility: 'public' | 'private';
   version: number;
-  nodes: import('../schema/diagram-content').DiagramContent['nodes'];
-  edges: import('../schema/diagram-content').DiagramContent['edges'];
+  nodes: DiagramContent['nodes'];
+  edges: DiagramContent['edges'];
+};
+
+export type PublicDiagram = {
+  id: string;
+  title: string;
+  nodes: DiagramContent['nodes'];
+  edges: DiagramContent['edges'];
+};
+
+export const getPublicDiagram = async (id: string): Promise<PublicDiagram | null> => {
+  const row = await diagramRepository.findPublicById(id);
+  if (!row) return null;
+
+  const parsed = diagramContentSchema.safeParse({
+    version: 1,
+    nodes: row.nodes,
+    edges: row.edges,
+  });
+
+  const content = parsed.success ? parsed.data : EMPTY_DIAGRAM_CONTENT;
+
+  return { id: row.id, title: row.title, nodes: content.nodes, edges: content.edges };
 };
 
 export const getDiagramForEdit = async (id: string): Promise<DiagramForEdit | null> => {

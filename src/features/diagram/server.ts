@@ -3,5 +3,6 @@ export {
   getDiagramForEdit,
   getDiagramsList,
   getFavoriteDiagramsList,
+  getPublicDiagram,
   listMyTags,
 } from '@/features/diagram/server/diagram.queries';

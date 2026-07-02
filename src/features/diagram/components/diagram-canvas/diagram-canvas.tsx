@@ -17,7 +17,10 @@ import { DiagramToolbar } from '@/features/diagram/components/diagram-toolbar';
 import { edgeTypes, nodeTypes } from '@/features/diagram/components/diagram-types';
 import { UmlMarkers } from '@/features/diagram/components/uml-markers';
 import { useDiagramInteractions } from '@/features/diagram/hooks/use-diagram-interactions';
-import { isValidFlowConnection } from '@/features/diagram/lib/diagram-canvas-utils';
+import {
+  isValidFlowConnection,
+  layerBoundariesFirst,
+} from '@/features/diagram/lib/diagram-canvas-utils';
 import { miniMapNodeColor } from '@/features/diagram/lib/minimap-node-color';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
 import { useEditorStore } from '@/features/diagram/store/editor-store';
@@ -79,9 +82,7 @@ const DiagramCanvasInner = ({
     selectionOnDrag,
   } = useDiagramInteractions();
 
-  const layeredNodes = [...nodes].sort((a, b) =>
-    a.data.kind === 'boundary' ? -1 : b.data.kind === 'boundary' ? 1 : 0,
-  );
+  const layeredNodes = layerBoundariesFirst(nodes);
 
   return (
     <div className="h-full w-full">
