@@ -97,6 +97,15 @@ export const diagramRepository = {
   setFavorite: (id: string, isFavorite: boolean) =>
     db.diagram.update({ where: { id }, data: { isFavorite }, select: DIAGRAM_CARD_SELECT }),
 
+  findPublicById: (id: string) =>
+    db.diagram.findFirst({
+      where: { id, visibility: 'public' },
+      select: { id: true, title: true, nodes: true, edges: true },
+    }),
+
+  setVisibility: (id: string, visibility: 'public' | 'private') =>
+    db.diagram.update({ where: { id }, data: { visibility }, select: { visibility: true } }),
+
   findContentById: (id: string) =>
     db.diagram.findUnique({
       where: { id },

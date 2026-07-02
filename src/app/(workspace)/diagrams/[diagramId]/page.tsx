@@ -17,6 +17,7 @@ export default async function DiagramWorkspacePage({ params }: DiagramWorkspaceP
     <DiagramEditor
       id={diagram.id}
       title={diagram.title}
+      visibility={diagram.visibility}
       nodes={diagram.nodes}
       edges={diagram.edges}
     />

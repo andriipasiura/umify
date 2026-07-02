@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { type DiagramFilters } from '../search/diagram-filters';
 import { diagramRepository } from './diagram.repository';
 
-const { findMany, count, findUnique, create, update, deleteOne } = vi.hoisted(() => ({
+const { findMany, count, findUnique, findFirst, create, update, deleteOne } = vi.hoisted(() => ({
   findMany: vi.fn(),
   count: vi.fn(),
   findUnique: vi.fn(),
+  findFirst: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   deleteOne: vi.fn(),
@@ -18,6 +19,7 @@ vi.mock('@/lib/db', () => ({
       findMany,
       count,
       findUnique,
+      findFirst,
       create,
       update,
       delete: deleteOne,
@@ -140,6 +142,38 @@ describe('diagramRepository.setFavorite', () => {
       expect.objectContaining({
         where: { id: 'd1' },
         data: { isFavorite: true },
+      }),
+    );
+  });
+});
+
+describe('diagramRepository.findPublicById', () => {
+  beforeEach(() => {
+    findFirst.mockReset().mockResolvedValue(null);
+  });
+
+  test('filters by public visibility and never selects ownerId', async () => {
+    await diagramRepository.findPublicById('d1');
+
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { id: 'd1', visibility: 'public' },
+      select: { id: true, title: true, nodes: true, edges: true },
+    });
+  });
+});
+
+describe('diagramRepository.setVisibility', () => {
+  beforeEach(() => {
+    update.mockReset().mockResolvedValue({ visibility: 'public' });
+  });
+
+  test('updates only the visibility field', async () => {
+    await diagramRepository.setVisibility('d1', 'public');
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'd1' },
+        data: { visibility: 'public' },
       }),
     );
   });

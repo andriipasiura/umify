@@ -135,6 +135,31 @@ export const renameDiagram = async (
   return { ok: true, data: { title: parsed.data.title } };
 };
 
+export const setDiagramVisibility = async (
+  id: string,
+  visibility: unknown,
+): Promise<ActionResult<{ visibility: 'public' | 'private' }>> => {
+  const user = await requireUser();
+
+  if (!id) return { ok: false, error: errors.INVALID_INPUT };
+
+  const parsed = diagramMetaSchema.pick({ visibility: true }).safeParse({ visibility });
+  if (!parsed.success) {
+    return { ok: false, error: errors.INVALID_INPUT, fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  const existing = await diagramRepository.findOwner(id);
+  if (!existing) return { ok: false, error: errors.NOT_FOUND };
+  if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
+
+  const updated = await diagramRepository.setVisibility(id, parsed.data.visibility);
+  revalidatePath(routes.diagrams);
+  revalidatePath(routes.favorites);
+  revalidatePath(routes.diagram(id));
+  revalidatePath(routes.share(id));
+  return { ok: true, data: { visibility: updated.visibility } };
+};
+
 export const toggleFavorite = async (
   id: string,
 ): Promise<ActionResult<{ isFavorite: boolean }>> => {

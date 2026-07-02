@@ -2,18 +2,21 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { type DiagramFilters } from '../search/diagram-filters';
 import { type DiagramCardData } from '../types';
-import { getDiagramsList, listMyTags } from './diagram.queries';
+import { getDiagramsList, getPublicDiagram, listMyTags } from './diagram.queries';
 
-const { requireUserMock, findByOwner, countByOwner, distinctTags } = vi.hoisted(() => ({
-  requireUserMock: vi.fn(),
-  findByOwner: vi.fn(),
-  countByOwner: vi.fn(),
-  distinctTags: vi.fn(),
-}));
+const { requireUserMock, findByOwner, countByOwner, distinctTags, findPublicById } = vi.hoisted(
+  () => ({
+    requireUserMock: vi.fn(),
+    findByOwner: vi.fn(),
+    countByOwner: vi.fn(),
+    distinctTags: vi.fn(),
+    findPublicById: vi.fn(),
+  }),
+);
 
 vi.mock('@/lib/auth/require-user', () => ({ requireUser: requireUserMock }));
 vi.mock('./diagram.repository', () => ({
-  diagramRepository: { findByOwner, countByOwner, distinctTags },
+  diagramRepository: { findByOwner, countByOwner, distinctTags, findPublicById },
 }));
 
 const filters: DiagramFilters = { search: '', visibility: 'all', sort: 'recent', tags: [] };
@@ -61,6 +64,63 @@ describe('getDiagramsList', () => {
   test('rejects when unauthenticated', async () => {
     requireUserMock.mockRejectedValue(new Error('Unauthorized'));
     await expect(getDiagramsList(filters)).rejects.toThrow('Unauthorized');
+  });
+});
+
+describe('getPublicDiagram', () => {
+  const validNode = {
+    id: 'n1',
+    type: 'actor',
+    position: { x: 0, y: 0 },
+    data: { kind: 'actor', label: 'User' },
+  };
+
+  beforeEach(() => {
+    requireUserMock.mockReset();
+    findPublicById.mockReset();
+  });
+
+  test('returns null when the diagram is missing or private', async () => {
+    findPublicById.mockResolvedValue(null);
+    await expect(getPublicDiagram('d1')).resolves.toBeNull();
+  });
+
+  test('returns parsed content for a public diagram', async () => {
+    findPublicById.mockResolvedValue({
+      id: 'd1',
+      title: 'Login Flow',
+      nodes: [validNode],
+      edges: [],
+    });
+
+    await expect(getPublicDiagram('d1')).resolves.toEqual({
+      id: 'd1',
+      title: 'Login Flow',
+      nodes: [validNode],
+      edges: [],
+    });
+  });
+
+  test('falls back to empty content when stored JSON is malformed', async () => {
+    findPublicById.mockResolvedValue({
+      id: 'd1',
+      title: 'Login Flow',
+      nodes: [{ bogus: true }],
+      edges: 'not-an-array',
+    });
+
+    await expect(getPublicDiagram('d1')).resolves.toEqual({
+      id: 'd1',
+      title: 'Login Flow',
+      nodes: [],
+      edges: [],
+    });
+  });
+
+  test('never requires authentication', async () => {
+    findPublicById.mockResolvedValue(null);
+    await getPublicDiagram('d1');
+    expect(requireUserMock).not.toHaveBeenCalled();
   });
 });
 
