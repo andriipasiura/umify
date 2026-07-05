@@ -44,7 +44,7 @@ export const AppSidebar = ({
 
   return (
     <TooltipProvider>
-      <Sidebar collapsible="icon" className={className}>
+      <Sidebar collapsible="icon" className={className} variant="inset">
         <SidebarHeader>
           <div className="flex items-center gap-2 p-0.5 py-1.5">
             <UmifyMark className="-translate-x-[2.5px]" />
