@@ -23,7 +23,7 @@ const deriveStatus = (saving: boolean, failed: boolean, dirty: boolean): SaveSta
 
 type UseDiagramSaveResult = {
   status: SaveStatus;
-  saveNow: () => void;
+  saveNow: () => Promise<void>;
 };
 
 export const useDiagramSave = (id: string): UseDiagramSaveResult => {
