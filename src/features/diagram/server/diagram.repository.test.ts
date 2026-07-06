@@ -179,6 +179,30 @@ describe('diagramRepository.setVisibility', () => {
   });
 });
 
+describe('diagramRepository.setThumbnail', () => {
+  beforeEach(() => {
+    update.mockReset().mockResolvedValue({ id: 'd1', thumbnail: 'data:image/png;base64,abc' });
+  });
+
+  test('updates the thumbnail field', async () => {
+    await diagramRepository.setThumbnail('d1', 'data:image/png;base64,abc');
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'd1' },
+      data: { thumbnail: 'data:image/png;base64,abc' },
+    });
+  });
+
+  test('clears the thumbnail field with null', async () => {
+    await diagramRepository.setThumbnail('d1', null);
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'd1' },
+      data: { thumbnail: null },
+    });
+  });
+});
+
 describe('diagramRepository.remove', () => {
   beforeEach(() => {
     deleteOne.mockReset().mockResolvedValue({ id: 'd1' });

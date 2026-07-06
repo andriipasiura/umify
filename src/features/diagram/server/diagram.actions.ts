@@ -9,6 +9,7 @@ import { routes } from '@/lib/routes';
 
 import { diagramContentSchema } from '../schema/diagram-content';
 import { diagramMetaSchema } from '../schema/diagram-meta';
+import { diagramThumbnailSchema } from '../schema/diagram-thumbnail';
 import { diagramRepository } from './diagram.repository';
 import { type ActionResult } from './types';
 
@@ -109,6 +110,29 @@ export const saveDiagramContent = async (id: string, payload: unknown): Promise<
     edges: parsed.data.edges,
   });
   revalidatePath(routes.diagram(id));
+  return { ok: true, data: undefined };
+};
+
+export const saveDiagramThumbnail = async (
+  id: string,
+  thumbnail: unknown,
+): Promise<ActionResult> => {
+  const user = await requireUser();
+
+  if (!id) return { ok: false, error: errors.INVALID_INPUT };
+
+  const parsed = diagramThumbnailSchema.safeParse(thumbnail);
+  if (!parsed.success) {
+    return { ok: false, error: errors.INVALID_INPUT, fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  const existing = await diagramRepository.findOwner(id);
+  if (!existing) return { ok: false, error: errors.NOT_FOUND };
+  if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
+
+  await diagramRepository.setThumbnail(id, parsed.data);
+  revalidatePath(routes.diagrams);
+  revalidatePath(routes.favorites);
   return { ok: true, data: undefined };
 };
 

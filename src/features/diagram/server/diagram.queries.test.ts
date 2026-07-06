@@ -29,6 +29,7 @@ const ownDiagram: DiagramCardData = {
   tags: ['auth'],
   isFavorite: false,
   updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+  thumbnail: null,
 };
 
 describe('getDiagramsList', () => {

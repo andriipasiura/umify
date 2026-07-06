@@ -14,6 +14,8 @@ const stripEdge = (edge: UmlEdge): DiagramContent['edges'][number] => ({
   id: edge.id,
   source: edge.source,
   target: edge.target,
+  sourceHandle: edge.sourceHandle ?? null,
+  targetHandle: edge.targetHandle ?? null,
   type: UML_EDGE_TYPE,
   data: edge.data!,
 });

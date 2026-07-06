@@ -1,14 +1,26 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-const { saveDiagramContentMock, toastErrorMock, prefsMock } = vi.hoisted(() => ({
+const {
+  saveDiagramContentMock,
+  saveDiagramThumbnailMock,
+  captureThumbnailMock,
+  toastErrorMock,
+  prefsMock,
+} = vi.hoisted(() => ({
   saveDiagramContentMock: vi.fn(),
+  saveDiagramThumbnailMock: vi.fn(),
+  captureThumbnailMock: vi.fn(),
   toastErrorMock: vi.fn(),
   prefsMock: { autoSave: true, autoSaveInterval: 30 },
 }));
 
 vi.mock('@/features/diagram/server/diagram.actions', () => ({
   saveDiagramContent: saveDiagramContentMock,
+  saveDiagramThumbnail: saveDiagramThumbnailMock,
+}));
+vi.mock('@/features/diagram/lib/capture-thumbnail', () => ({
+  captureThumbnail: captureThumbnailMock,
 }));
 vi.mock('sonner', () => ({ toast: { error: toastErrorMock } }));
 vi.mock('@/features/settings/components/preferences-provider', () => ({
@@ -31,6 +43,8 @@ const makeNode = (id: string): UmlNode =>
 beforeEach(() => {
   useDiagramStore.getState().load({ nodes: [], edges: [] });
   saveDiagramContentMock.mockReset().mockResolvedValue({ ok: true, data: undefined });
+  saveDiagramThumbnailMock.mockReset().mockResolvedValue({ ok: true, data: undefined });
+  captureThumbnailMock.mockReset().mockResolvedValue('data:image/png;base64,abc');
   toastErrorMock.mockReset();
   prefsMock.autoSave = true;
   prefsMock.autoSaveInterval = 30;
@@ -158,6 +172,73 @@ describe('useDiagramSave', () => {
     });
 
     expect(saveDiagramContentMock).toHaveBeenCalledTimes(1);
+  });
+
+  test('captures and saves a thumbnail after a successful content save', async () => {
+    useDiagramStore.getState().addNode(makeNode('n1'));
+    const { result } = renderHook(() => useDiagramSave('d1'));
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    expect(captureThumbnailMock).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ id: 'n1' })]),
+    );
+    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', 'data:image/png;base64,abc');
+  });
+
+  test('clears the thumbnail when the diagram is empty', async () => {
+    captureThumbnailMock.mockResolvedValue(null);
+    const { result } = renderHook(() => useDiagramSave('d1'));
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', null);
+  });
+
+  test('does not capture a thumbnail when the content save fails', async () => {
+    saveDiagramContentMock.mockResolvedValue({ ok: false, error: 'Forbidden' });
+    useDiagramStore.getState().addNode(makeNode('n1'));
+
+    const { result } = renderHook(() => useDiagramSave('d1'));
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    expect(captureThumbnailMock).not.toHaveBeenCalled();
+    expect(saveDiagramThumbnailMock).not.toHaveBeenCalled();
+  });
+
+  test('thumbnail capture failure does not affect save status or show a toast', async () => {
+    captureThumbnailMock.mockRejectedValue(new Error('viewport not found'));
+    useDiagramStore.getState().addNode(makeNode('n1'));
+
+    const { result } = renderHook(() => useDiagramSave('d1'));
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    expect(result.current.status).toBe('saved');
+    expect(toastErrorMock).not.toHaveBeenCalled();
+  });
+
+  test('thumbnail save action failure does not affect save status or show a toast', async () => {
+    saveDiagramThumbnailMock.mockResolvedValue({ ok: false, error: 'Forbidden' });
+    useDiagramStore.getState().addNode(makeNode('n1'));
+
+    const { result } = renderHook(() => useDiagramSave('d1'));
+
+    await act(async () => {
+      await result.current.saveNow();
+    });
+
+    expect(result.current.status).toBe('saved');
+    expect(toastErrorMock).not.toHaveBeenCalled();
   });
 
   test('does not call markSaved when content changed mid-save', async () => {
