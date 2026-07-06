@@ -8,6 +8,7 @@ const {
   remove,
   setFavorite,
   setVisibility,
+  setThumbnail,
   revalidatePath,
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
@@ -17,18 +18,28 @@ const {
   remove: vi.fn(),
   setFavorite: vi.fn(),
   setVisibility: vi.fn(),
+  setThumbnail: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
 vi.mock('@/lib/auth/require-user', () => ({ requireUser: requireUserMock }));
 vi.mock('./diagram.repository', () => ({
-  diagramRepository: { findOwner, create, updateMeta, remove, setFavorite, setVisibility },
+  diagramRepository: {
+    findOwner,
+    create,
+    updateMeta,
+    remove,
+    setFavorite,
+    setVisibility,
+    setThumbnail,
+  },
 }));
 vi.mock('next/cache', () => ({ revalidatePath }));
 
 import {
   createDiagram,
   deleteDiagram,
+  saveDiagramThumbnail,
   setDiagramVisibility,
   toggleFavorite,
   updateDiagramMeta,
@@ -173,6 +184,53 @@ describe('setDiagramVisibility', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/favorites');
     expect(revalidatePath).toHaveBeenCalledWith('/diagrams/d1');
     expect(revalidatePath).toHaveBeenCalledWith('/share/d1');
+  });
+});
+
+describe('saveDiagramThumbnail', () => {
+  beforeEach(() => {
+    requireUserMock.mockReset().mockResolvedValue({ id: 'user_1' });
+    findOwner.mockReset().mockResolvedValue({ ownerId: 'user_1', isFavorite: false });
+    setThumbnail.mockReset().mockResolvedValue({ id: 'd1' });
+    revalidatePath.mockReset();
+  });
+
+  test('rejects when unauthenticated', async () => {
+    requireUserMock.mockRejectedValue(new Error('Unauthorized'));
+    expect(saveDiagramThumbnail('d1', 'data:image/png;base64,abc')).rejects.toThrow('Unauthorized');
+  });
+
+  test('returns validation error for an invalid data URL', async () => {
+    const result = await saveDiagramThumbnail('d1', 'data:image/jpeg;base64,abc');
+    expect(result).toMatchObject({ ok: false, error: 'Invalid input' });
+    expect(setThumbnail).not.toHaveBeenCalled();
+  });
+
+  test('returns Not found when diagram does not exist', async () => {
+    findOwner.mockResolvedValue(null);
+    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+    expect(result).toEqual({ ok: false, error: 'Not found' });
+  });
+
+  test('returns Forbidden for non-owner', async () => {
+    findOwner.mockResolvedValue({ ownerId: 'other_user', isFavorite: false });
+    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+    expect(result).toEqual({ ok: false, error: 'Forbidden' });
+    expect(setThumbnail).not.toHaveBeenCalled();
+  });
+
+  test('saves the thumbnail and revalidates the lists for the owner', async () => {
+    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+    expect(result).toEqual({ ok: true, data: undefined });
+    expect(setThumbnail).toHaveBeenCalledWith('d1', 'data:image/png;base64,abc');
+    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/favorites');
+  });
+
+  test('clears the thumbnail when given null', async () => {
+    const result = await saveDiagramThumbnail('d1', null);
+    expect(result).toEqual({ ok: true, data: undefined });
+    expect(setThumbnail).toHaveBeenCalledWith('d1', null);
   });
 });
 

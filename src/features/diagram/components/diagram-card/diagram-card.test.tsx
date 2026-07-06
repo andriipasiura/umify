@@ -14,6 +14,7 @@ const diagram: DiagramCardData = {
   tags: ['auth', 'login'],
   isFavorite: false,
   updatedAt: new Date('2026-06-01T00:00:00.000Z'),
+  thumbnail: null,
 };
 
 describe('DiagramCard', () => {
@@ -50,6 +51,23 @@ describe('DiagramCard', () => {
   test('shows filled star when isFavorite is true', () => {
     render(<DiagramCard diagram={{ ...diagram, isFavorite: true }} />);
     expect(screen.getByRole('button', { name: 'Remove from favorites' })).toBeInTheDocument();
+  });
+
+  test('shows the decorative mark and no image when thumbnail is null', () => {
+    render(<DiagramCard diagram={diagram} />);
+    const openLink = screen.getByRole('link', { name: 'Open Login Flow' });
+
+    expect(openLink.querySelector('img')).not.toBeInTheDocument();
+    expect(openLink.querySelector('svg')).toBeInTheDocument();
+  });
+
+  test('renders the thumbnail image when present', () => {
+    const thumbnail = 'data:image/png;base64,abc';
+    render(<DiagramCard diagram={{ ...diagram, thumbnail }} />);
+    const openLink = screen.getByRole('link', { name: 'Open Login Flow' });
+
+    expect(openLink.querySelector('img')).toHaveAttribute('src', thumbnail);
+    expect(openLink.querySelector('svg')).not.toBeInTheDocument();
   });
 
   test('calls onToggleFavorite when the star button is clicked', async () => {

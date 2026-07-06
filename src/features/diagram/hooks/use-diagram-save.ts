@@ -3,8 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { captureThumbnail } from '@/features/diagram/lib/capture-thumbnail';
 import { toDiagramContent } from '@/features/diagram/lib/serialize-content';
-import { saveDiagramContent } from '@/features/diagram/server/diagram.actions';
+import {
+  saveDiagramContent,
+  saveDiagramThumbnail,
+} from '@/features/diagram/server/diagram.actions';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
 import { usePreferences } from '@/features/settings/components/preferences-provider';
 
@@ -49,6 +53,11 @@ export const useDiagramSave = (id: string): UseDiagramSaveResult => {
         if (current.nodes === nodes && current.edges === edges) {
           markSaved();
         }
+
+        try {
+          const thumbnail = await captureThumbnail(nodes);
+          await saveDiagramThumbnail(id, thumbnail);
+        } catch {}
       } else {
         setFailed(true);
         toast.error(result.error ?? 'Failed to save diagram');

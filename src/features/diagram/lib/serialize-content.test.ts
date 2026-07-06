@@ -23,6 +23,8 @@ const makeEdge = (extra: Record<string, unknown> = {}): UmlEdge =>
     id: 'e1',
     source: 'n1',
     target: 'n2',
+    sourceHandle: 'right',
+    targetHandle: 'left',
     type: 'uml',
     data: { relation: 'association' },
     selected: true,
@@ -55,6 +57,21 @@ describe('toDiagramContent', () => {
   test('strips transient edge fields', () => {
     const { edges } = toDiagramContent([], [makeEdge()]);
     expect(edges[0]).not.toHaveProperty('selected');
+  });
+
+  test('keeps sourceHandle and targetHandle', () => {
+    const { edges } = toDiagramContent([], [makeEdge()]);
+    expect(edges[0].sourceHandle).toBe('right');
+    expect(edges[0].targetHandle).toBe('left');
+  });
+
+  test('nulls out missing sourceHandle and targetHandle', () => {
+    const { edges } = toDiagramContent(
+      [],
+      [makeEdge({ sourceHandle: undefined, targetHandle: undefined })],
+    );
+    expect(edges[0].sourceHandle).toBeNull();
+    expect(edges[0].targetHandle).toBeNull();
   });
 
   test('round-trips through diagramContentSchema', () => {

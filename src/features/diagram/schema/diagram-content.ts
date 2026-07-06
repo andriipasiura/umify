@@ -24,6 +24,8 @@ const umlEdge = z.object({
   id: z.string(),
   source: z.string(),
   target: z.string(),
+  sourceHandle: z.string().nullable().optional(),
+  targetHandle: z.string().nullable().optional(),
   type: z.literal(UML_EDGE_TYPE),
   data: z.object({
     relation: z.enum(UML_RELATIONS),

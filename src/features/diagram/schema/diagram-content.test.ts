@@ -73,4 +73,34 @@ describe('diagramContentSchema', () => {
     expect(diagramContentSchema.safeParse({ version: 1, edges: [] }).success).toBe(false);
     expect(diagramContentSchema.safeParse({ nodes: [], edges: [] }).success).toBe(false);
   });
+
+  test('preserves sourceHandle and targetHandle when present', () => {
+    const result = diagramContentSchema.safeParse({
+      version: 1,
+      nodes: [],
+      edges: [{ ...validEdge, sourceHandle: 'right', targetHandle: 'left' }],
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.edges[0]).toMatchObject({ sourceHandle: 'right', targetHandle: 'left' });
+    }
+  });
+
+  test('accepts edges without sourceHandle/targetHandle for backward compatibility', () => {
+    const result = diagramContentSchema.safeParse({
+      version: 1,
+      nodes: [],
+      edges: [validEdge],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test('accepts null sourceHandle/targetHandle', () => {
+    const result = diagramContentSchema.safeParse({
+      version: 1,
+      nodes: [],
+      edges: [{ ...validEdge, sourceHandle: null, targetHandle: null }],
+    });
+    expect(result.success).toBe(true);
+  });
 });

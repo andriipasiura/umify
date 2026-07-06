@@ -16,6 +16,7 @@ const DIAGRAM_CARD_SELECT = {
   tags: true,
   isFavorite: true,
   updatedAt: true,
+  thumbnail: true,
 } satisfies Prisma.DiagramSelect;
 
 const buildWhere = (ownerId: string, filters: DiagramFilters): Prisma.DiagramWhereInput => ({
@@ -124,4 +125,7 @@ export const diagramRepository = {
     db.diagram.update({ where: { id }, data }),
 
   rename: (id: string, title: string) => db.diagram.update({ where: { id }, data: { title } }),
+
+  setThumbnail: (id: string, thumbnail: string | null) =>
+    db.diagram.update({ where: { id }, data: { thumbnail } }),
 };

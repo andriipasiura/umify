@@ -51,7 +51,19 @@ export const DiagramCard = ({
         aria-label={`Open ${diagram.title}`}
         tabIndex={0}
       >
-        <DiagramPreviewMark className="group-hover/card:text-primary/70 h-14 w-20 transition-colors" />
+        <Show
+          when={diagram.thumbnail !== null}
+          fallback={
+            <DiagramPreviewMark className="group-hover/card:text-primary/70 h-14 w-20 transition-colors" />
+          }
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- data URL, next/image adds no value here */}
+          <img
+            src={diagram.thumbnail ?? undefined}
+            alt=""
+            className="h-full w-full object-contain p-2"
+          />
+        </Show>
       </Link>
 
       <div className="absolute top-2 right-2 z-10" onClick={(e) => e.preventDefault()}>
