@@ -26,7 +26,7 @@ export const OAuthButton = ({ provider, className }: OAuthButtonProps) => {
   const { label, Icon } = PROVIDERS[provider];
 
   return (
-    <Button type="submit" variant="outline" className={cn('w-full', className)} size="lg">
+    <Button type="submit" variant="outline" className={cn('h-11 w-full', className)} size="lg">
       <Icon className="size-5" />
       {label}
     </Button>
