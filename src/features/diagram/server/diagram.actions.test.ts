@@ -4,6 +4,7 @@ const {
   requireUserMock,
   findOwner,
   create,
+  createWithContent,
   updateMeta,
   remove,
   setFavorite,
@@ -14,6 +15,7 @@ const {
   requireUserMock: vi.fn(),
   findOwner: vi.fn(),
   create: vi.fn(),
+  createWithContent: vi.fn(),
   updateMeta: vi.fn(),
   remove: vi.fn(),
   setFavorite: vi.fn(),
@@ -27,6 +29,7 @@ vi.mock('./diagram.repository', () => ({
   diagramRepository: {
     findOwner,
     create,
+    createWithContent,
     updateMeta,
     remove,
     setFavorite,
@@ -39,6 +42,7 @@ vi.mock('next/cache', () => ({ revalidatePath }));
 import {
   createDiagram,
   deleteDiagram,
+  importGuestDiagram,
   saveDiagramThumbnail,
   setDiagramVisibility,
   toggleFavorite,
@@ -69,7 +73,7 @@ describe('createDiagram', () => {
     const result = await createDiagram(validMeta);
     expect(result).toEqual({ ok: true, data: { id: 'new_id' } });
     expect(create).toHaveBeenCalledWith('user_1', expect.objectContaining({ title: 'Login Flow' }));
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
   });
 });
 
@@ -107,7 +111,7 @@ describe('updateDiagramMeta', () => {
     const result = await updateDiagramMeta('d1', validMeta);
     expect(result).toEqual({ ok: true, data: { id: 'd1' } });
     expect(updateMeta).toHaveBeenCalledWith('d1', expect.objectContaining({ title: 'Login Flow' }));
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
   });
 });
 
@@ -140,7 +144,7 @@ describe('deleteDiagram', () => {
     const result = await deleteDiagram('d1');
     expect(result).toEqual({ ok: true, data: undefined });
     expect(remove).toHaveBeenCalledWith('d1');
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
   });
 });
 
@@ -180,7 +184,7 @@ describe('setDiagramVisibility', () => {
     const result = await setDiagramVisibility('d1', 'public');
     expect(result).toEqual({ ok: true, data: { visibility: 'public' } });
     expect(setVisibility).toHaveBeenCalledWith('d1', 'public');
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
     expect(revalidatePath).toHaveBeenCalledWith('/favorites');
     expect(revalidatePath).toHaveBeenCalledWith('/diagrams/d1');
     expect(revalidatePath).toHaveBeenCalledWith('/share/d1');
@@ -223,7 +227,7 @@ describe('saveDiagramThumbnail', () => {
     const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
     expect(result).toEqual({ ok: true, data: undefined });
     expect(setThumbnail).toHaveBeenCalledWith('d1', 'data:image/png;base64,abc');
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
     expect(revalidatePath).toHaveBeenCalledWith('/favorites');
   });
 
@@ -257,6 +261,61 @@ describe('toggleFavorite', () => {
     const result = await toggleFavorite('d1');
     expect(result).toEqual({ ok: true, data: { isFavorite: true } });
     expect(setFavorite).toHaveBeenCalledWith('d1', true);
-    expect(revalidatePath).toHaveBeenCalledWith('/diagrams');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
+  });
+});
+
+describe('importGuestDiagram', () => {
+  const validContent = { version: 1 as const, nodes: [], edges: [] };
+  const nonEmptyContent = {
+    version: 1 as const,
+    nodes: [
+      {
+        id: 'n1',
+        type: 'actor' as const,
+        position: { x: 0, y: 0 },
+        data: { kind: 'actor' as const, label: 'Actor' },
+      },
+    ],
+    edges: [],
+  };
+
+  beforeEach(() => {
+    requireUserMock.mockReset().mockResolvedValue({ id: 'user_1' });
+    createWithContent.mockReset().mockResolvedValue({ id: 'new_id' });
+    revalidatePath.mockReset();
+  });
+
+  test('rejects when unauthenticated', async () => {
+    requireUserMock.mockRejectedValue(new Error('Unauthorized'));
+    expect(
+      importGuestDiagram({ title: 'Untitled diagram', content: nonEmptyContent }),
+    ).rejects.toThrow('Unauthorized');
+  });
+
+  test('returns validation error for invalid input', async () => {
+    const result = await importGuestDiagram({ title: '', content: nonEmptyContent });
+    expect(result).toMatchObject({ ok: false, error: 'Invalid input' });
+    expect(createWithContent).not.toHaveBeenCalled();
+  });
+
+  test('rejects an empty diagram (no nodes or edges)', async () => {
+    const result = await importGuestDiagram({ title: 'Untitled diagram', content: validContent });
+    expect(result).toEqual({ ok: false, error: 'Invalid input' });
+    expect(createWithContent).not.toHaveBeenCalled();
+  });
+
+  test('creates the diagram and revalidates the dashboard for valid non-empty content', async () => {
+    const result = await importGuestDiagram({
+      title: 'My guest diagram',
+      content: nonEmptyContent,
+    });
+    expect(result).toEqual({ ok: true, data: { id: 'new_id' } });
+    expect(createWithContent).toHaveBeenCalledWith('user_1', {
+      title: 'My guest diagram',
+      nodes: nonEmptyContent.nodes,
+      edges: nonEmptyContent.edges,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith('/');
   });
 });

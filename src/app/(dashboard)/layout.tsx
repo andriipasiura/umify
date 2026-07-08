@@ -2,10 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { AppSidebar } from '@/components/app-sidebar';
-import { ContentLayout } from '@/components/content-layout';
-import { DashboardHeader } from '@/components/dashboard-header';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { DashboardShell } from '@/components/dashboard-shell';
 import { signOutAction } from '@/features/auth/server';
 import { toSessionUser } from '@/lib/auth/session-user';
 import { routes } from '@/lib/routes';
@@ -24,12 +21,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = toSessionUser(session.user);
 
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar user={user} signOutAction={signOutAction} />
-      <ContentLayout>
-        <DashboardHeader />
-        <div className="flex flex-1 flex-col gap-4 p-6">{children}</div>
-      </ContentLayout>
-    </SidebarProvider>
+    <DashboardShell user={user} signOutAction={signOutAction} defaultOpen={defaultOpen}>
+      {children}
+    </DashboardShell>
   );
 }

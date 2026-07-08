@@ -38,7 +38,7 @@ export const useLeaveGuard = (saveNow: () => Promise<void>): UseLeaveGuardResult
   }, []);
 
   const onLeave = useCallback(() => {
-    router.push(routes.diagrams);
+    router.push(routes.home);
   }, [router]);
 
   const onSaveAndLeave = useCallback(async () => {
@@ -50,7 +50,7 @@ export const useLeaveGuard = (saveNow: () => Promise<void>): UseLeaveGuardResult
     }
 
     if (!useDiagramStore.getState().dirty) {
-      router.push(routes.diagrams);
+      router.push(routes.home);
     }
   }, [router, saveNow]);
 

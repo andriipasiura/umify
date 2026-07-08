@@ -130,6 +130,33 @@ describe('diagramRepository.create', () => {
   });
 });
 
+describe('diagramRepository.createWithContent', () => {
+  beforeEach(() => {
+    create.mockReset().mockResolvedValue({ id: 'new-id' });
+  });
+
+  test('creates a private diagram with the given content and no category/tags', async () => {
+    await diagramRepository.createWithContent('owner_1', {
+      title: 'Imported diagram',
+      nodes: [{ id: '1' }],
+      edges: [],
+    });
+
+    expect(create).toHaveBeenCalledWith({
+      data: {
+        title: 'Imported diagram',
+        nodes: [{ id: '1' }],
+        edges: [],
+        ownerId: 'owner_1',
+        category: null,
+        tags: [],
+        visibility: 'private',
+      },
+      select: { id: true },
+    });
+  });
+});
+
 describe('diagramRepository.setFavorite', () => {
   beforeEach(() => {
     update.mockReset().mockResolvedValue({ id: 'd1', isFavorite: true });

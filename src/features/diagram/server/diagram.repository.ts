@@ -83,6 +83,21 @@ export const diagramRepository = {
       select: DIAGRAM_CARD_SELECT,
     }),
 
+  createWithContent: (
+    ownerId: string,
+    data: { title: string; nodes: JsonValue; edges: JsonValue },
+  ) =>
+    db.diagram.create({
+      data: {
+        ...data,
+        ownerId,
+        category: null,
+        tags: [],
+        visibility: 'private',
+      },
+      select: { id: true },
+    }),
+
   updateMeta: (
     id: string,
     data: {
