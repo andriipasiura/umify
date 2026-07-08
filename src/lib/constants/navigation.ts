@@ -9,7 +9,7 @@ export type DashboardNavItem = {
 };
 
 export const DASHBOARD_NAV_ITEMS: readonly DashboardNavItem[] = [
-  { label: 'Diagrams', href: routes.diagrams, icon: Workflow },
+  { label: 'Diagrams', href: routes.home, icon: Workflow },
   { label: 'Favorites', href: routes.favorites, icon: Star },
   { label: 'Settings', href: routes.settings, icon: Settings },
 ];

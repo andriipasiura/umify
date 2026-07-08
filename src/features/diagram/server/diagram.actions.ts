@@ -43,7 +43,40 @@ export const createDiagram = async (payload: unknown): Promise<ActionResult<{ id
     ...rest,
     category: toCategory(category),
   });
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
+  return { ok: true, data: { id: diagram.id } };
+};
+
+export const importGuestDiagram = async (
+  payload: unknown,
+): Promise<ActionResult<{ id: string }>> => {
+  const user = await requireUser();
+
+  const parsed = z
+    .object({
+      title: diagramMetaSchema.shape.title,
+      content: diagramContentSchema,
+    })
+    .safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: errors.INVALID_INPUT,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
+  }
+
+  const { title, content } = parsed.data;
+  if (content.nodes.length === 0 && content.edges.length === 0) {
+    return { ok: false, error: errors.INVALID_INPUT };
+  }
+
+  const diagram = await diagramRepository.createWithContent(user.id, {
+    title,
+    nodes: content.nodes,
+    edges: content.edges,
+  });
+  revalidatePath(routes.home);
   return { ok: true, data: { id: diagram.id } };
 };
 
@@ -71,7 +104,7 @@ export const updateDiagramMeta = async (
   if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
 
   await diagramRepository.updateMeta(id, { ...rest, category: toCategory(category) });
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   revalidatePath(routes.favorites);
   return { ok: true, data: { id } };
 };
@@ -86,7 +119,7 @@ export const deleteDiagram = async (id: string): Promise<ActionResult> => {
   if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
 
   await diagramRepository.remove(id);
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   revalidatePath(routes.favorites);
   return { ok: true, data: undefined };
 };
@@ -131,7 +164,7 @@ export const saveDiagramThumbnail = async (
   if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
 
   await diagramRepository.setThumbnail(id, parsed.data);
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   revalidatePath(routes.favorites);
   return { ok: true, data: undefined };
 };
@@ -155,7 +188,7 @@ export const renameDiagram = async (
 
   await diagramRepository.rename(id, parsed.data.title);
   revalidatePath(routes.diagram(id));
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   return { ok: true, data: { title: parsed.data.title } };
 };
 
@@ -177,7 +210,7 @@ export const setDiagramVisibility = async (
   if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
 
   const updated = await diagramRepository.setVisibility(id, parsed.data.visibility);
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   revalidatePath(routes.favorites);
   revalidatePath(routes.diagram(id));
   revalidatePath(routes.share(id));
@@ -196,7 +229,7 @@ export const toggleFavorite = async (
   if (existing.ownerId !== user.id) return { ok: false, error: errors.FORBIDDEN };
 
   const updated = await diagramRepository.setFavorite(id, !existing.isFavorite);
-  revalidatePath(routes.diagrams);
+  revalidatePath(routes.home);
   revalidatePath(routes.favorites);
   return { ok: true, data: { isFavorite: updated.isFavorite } };
 };

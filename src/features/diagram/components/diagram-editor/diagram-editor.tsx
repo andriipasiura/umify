@@ -46,7 +46,7 @@ export const DiagramEditor = ({ id, title, visibility, nodes, edges }: DiagramEd
       <DiagramTopbar
         leftSlot={
           <Button asChild variant="ghost" size="sm">
-            <Link href={routes.diagrams} onClick={leaveGuard.onBackClick}>
+            <Link href={routes.home} onClick={leaveGuard.onBackClick}>
               ← All diagrams
             </Link>
           </Button>

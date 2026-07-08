@@ -100,7 +100,7 @@ describe('useLeaveGuard', () => {
 
     act(() => result.current.onLeave());
 
-    expect(pushMock).toHaveBeenCalledWith('/diagrams');
+    expect(pushMock).toHaveBeenCalledWith('/');
     expect(useDiagramStore.getState().dirty).toBe(true);
   });
 
@@ -116,7 +116,7 @@ describe('useLeaveGuard', () => {
     });
 
     expect(saveNow).toHaveBeenCalled();
-    expect(pushMock).toHaveBeenCalledWith('/diagrams');
+    expect(pushMock).toHaveBeenCalledWith('/');
     expect(result.current.saving).toBe(false);
   });
 
@@ -161,7 +161,7 @@ describe('useLeaveGuard', () => {
     });
 
     expect(result.current.saving).toBe(false);
-    expect(pushMock).toHaveBeenCalledWith('/diagrams');
+    expect(pushMock).toHaveBeenCalledWith('/');
   });
 
   test('warns on beforeunload while dirty', () => {

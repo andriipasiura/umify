@@ -5,7 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 import { AppSidebar } from './app-sidebar';
 
-const usePathnameMock = vi.fn(() => '/diagrams');
+const usePathnameMock = vi.fn(() => '/');
 
 vi.mock('next/navigation', () => ({
   usePathname: () => usePathnameMock(),
@@ -26,7 +26,7 @@ describe('AppSidebar', () => {
 
     expect(screen.getByText('UmiFy')).toBeInTheDocument();
     expect(screen.getByText('Free UML-tool')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /diagrams/i })).toHaveAttribute('href', '/diagrams');
+    expect(screen.getByRole('link', { name: /diagrams/i })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: /favorites/i })).toHaveAttribute('href', '/favorites');
     expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute('href', '/settings');
   });
@@ -37,5 +37,12 @@ describe('AppSidebar', () => {
 
     expect(screen.getByRole('link', { name: /favorites/i })).toHaveAttribute('data-active', 'true');
     expect(screen.getByRole('link', { name: /diagrams/i })).toHaveAttribute('data-active', 'false');
+  });
+
+  test('marks Diagrams active on the editor route but not on other routes', () => {
+    usePathnameMock.mockReturnValue('/diagrams/d1');
+    renderSidebar();
+
+    expect(screen.getByRole('link', { name: /diagrams/i })).toHaveAttribute('data-active', 'true');
   });
 });

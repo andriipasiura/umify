@@ -32,7 +32,9 @@ type AppSidebarProps = {
 };
 
 const isItemActive = (pathname: string, href: string) =>
-  pathname === href || pathname.startsWith(`${href}/`);
+  href === '/'
+    ? pathname === '/' || pathname.startsWith('/diagrams/')
+    : pathname === href || pathname.startsWith(`${href}/`);
 
 export const AppSidebar = ({
   user,
