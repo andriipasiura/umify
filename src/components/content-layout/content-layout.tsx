@@ -11,7 +11,7 @@ type ContentLayoutProps = {
 export const ContentLayout = ({ children, className }: ContentLayoutProps) => (
   <SidebarInset
     className={cn(
-      '!ml-0 overflow-hidden overflow-y-auto border shadow-sm md:m-2 md:max-h-[calc(100svh-16px)] md:rounded-md',
+      '!ml-0 border shadow-sm md:m-2 md:max-h-[calc(100svh-16px)] md:overflow-hidden md:rounded-md',
       className,
     )}
   >

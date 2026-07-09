@@ -58,9 +58,9 @@ export const diagramRepository = {
   countFavoritesByOwner: (ownerId: string) =>
     db.diagram.count({ where: { ownerId, isFavorite: true } }),
 
-  distinctTags: async (ownerId: string): Promise<string[]> => {
+  distinctTags: async (ownerId: string, isFavorite?: boolean): Promise<string[]> => {
     const rows = await db.diagram.findMany({
-      where: { ownerId },
+      where: { ownerId, isFavorite },
       select: { tags: true },
     });
     return [...new Set(rows.flatMap((row) => row.tags))].sort();

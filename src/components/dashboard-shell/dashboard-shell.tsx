@@ -23,7 +23,7 @@ export const DashboardShell = ({
     <AppSidebar user={user} signOutAction={signOutAction} />
     <ContentLayout>
       <DashboardHeader />
-      <div className="flex flex-1 flex-col gap-4 p-6">{children}</div>
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">{children}</div>
     </ContentLayout>
   </SidebarProvider>
 );
