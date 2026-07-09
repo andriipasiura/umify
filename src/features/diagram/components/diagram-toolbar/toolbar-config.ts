@@ -1,11 +1,10 @@
-import { ArrowRight, Eraser, Hand, MousePointer2, Square, Type } from 'lucide-react';
+import { Eraser, Hand, MousePointer2, Square, Type } from 'lucide-react';
 import { type ComponentType } from 'react';
 
 import {
   type EditorTool,
   TOOL_ACTOR,
   TOOL_BOUNDARY,
-  TOOL_EDGE,
   TOOL_ERASER,
   TOOL_NOTE,
   TOOL_PAN,
@@ -34,7 +33,6 @@ export const TOOL_CONFIG: ToolConfig[] = [
   { tool: TOOL_BOUNDARY, icon: Square, label: 'Boundary', shortcut: '5' },
   { tool: TOOL_USECASE, icon: UseCaseToolbarIcon, label: 'Use Case', shortcut: '6' },
   { tool: TOOL_NOTE, icon: Type, label: 'Note', shortcut: '7' },
-  { tool: TOOL_EDGE, icon: ArrowRight, label: 'Edge', shortcut: 'E' },
 ];
 
 export const RELATION_LABEL: Record<UmlRelation, string> = {
@@ -47,5 +45,4 @@ export const RELATION_LABEL: Record<UmlRelation, string> = {
 export const TOOL_GROUPS: EditorTool[][] = [
   [TOOL_SELECT, TOOL_PAN, TOOL_ERASER],
   [TOOL_ACTOR, TOOL_BOUNDARY, TOOL_USECASE, TOOL_NOTE],
-  [TOOL_EDGE],
 ];

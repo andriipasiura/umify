@@ -64,17 +64,18 @@ export const useDiagramStore = create<DiagramState & DiagramActions>()(
 
     onNodesChange: (changes) =>
       set((s) => {
-        s.nodes = applyNodeChanges(changes, s.nodes);
         const structural = changes.some((c) => c.type === 'remove');
         if (structural) commit(s);
-        else s.dirty = true;
+        s.nodes = applyNodeChanges(changes, s.nodes);
+        if (!structural) s.dirty = true;
       }),
 
     onEdgesChange: (changes) =>
       set((s) => {
+        const structural = changes.some((c) => c.type === 'remove');
+        if (structural) commit(s);
         s.edges = applyEdgeChanges(changes, s.edges);
-        if (changes.some((c) => c.type === 'remove')) commit(s);
-        else s.dirty = true;
+        if (!structural) s.dirty = true;
       }),
 
     onConnect: (connection) =>

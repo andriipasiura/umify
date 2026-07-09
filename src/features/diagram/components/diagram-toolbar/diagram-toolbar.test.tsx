@@ -25,7 +25,7 @@ describe('DiagramToolbar', () => {
     expect(screen.getByRole('button', { name: 'Boundary' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Use Case' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Note' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Edge' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Choose relation type' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Undo' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Redo' })).toBeInTheDocument();
   });

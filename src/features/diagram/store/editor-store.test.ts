@@ -12,7 +12,7 @@ describe('useEditorStore', () => {
   });
 
   test('setTool transitions to the given tool', () => {
-    const tools: EditorTool[] = ['pan', 'eraser', 'actor', 'boundary', 'usecase', 'note', 'edge'];
+    const tools: EditorTool[] = ['pan', 'eraser', 'actor', 'boundary', 'usecase', 'note'];
     for (const tool of tools) {
       useEditorStore.getState().setTool(tool);
       expect(useEditorStore.getState().tool).toBe(tool);
