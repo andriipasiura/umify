@@ -7,7 +7,6 @@ import {
   type EditorTool,
   TOOL_ACTOR,
   TOOL_BOUNDARY,
-  TOOL_EDGE,
   TOOL_ERASER,
   TOOL_NOTE,
   TOOL_PAN,
@@ -24,7 +23,6 @@ const CODE_TO_TOOL: Record<string, EditorTool> = {
   Digit5: TOOL_BOUNDARY,
   Digit6: TOOL_USECASE,
   Digit7: TOOL_NOTE,
-  KeyE: TOOL_EDGE,
 };
 
 const isEditableTarget = (target: EventTarget | null): boolean => {

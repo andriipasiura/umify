@@ -42,14 +42,6 @@ describe('useEditorShortcuts', () => {
     }
   });
 
-  test('e/E switches to edge tool', () => {
-    renderHook(() => useEditorShortcuts());
-    fire('e');
-    expect(useEditorStore.getState().tool).toBe('edge');
-    fire('E');
-    expect(useEditorStore.getState().tool).toBe('edge');
-  });
-
   test('Ctrl+Z triggers undo (pops past)', () => {
     const node = {
       id: 'n1',

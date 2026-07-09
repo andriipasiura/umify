@@ -41,9 +41,9 @@ export const getFavoriteDiagramsList = async (
   return { diagrams, shownCount: diagrams.length, totalCount };
 };
 
-export const listMyTags = async (): Promise<string[]> => {
+export const listMyTags = async (isFavorite?: boolean): Promise<string[]> => {
   const user = await requireUser();
-  return diagramRepository.distinctTags(user.id);
+  return diagramRepository.distinctTags(user.id, isFavorite);
 };
 
 export type DiagramForEdit = {

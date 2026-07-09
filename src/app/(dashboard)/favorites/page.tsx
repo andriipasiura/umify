@@ -16,7 +16,7 @@ type FavoritesPageProps = {
 export default async function FavoritesPage({ searchParams }: FavoritesPageProps) {
   const [filters, availableTags] = await Promise.all([
     loadDiagramFilters(searchParams),
-    listMyTags(),
+    listMyTags(true),
   ]);
 
   return (

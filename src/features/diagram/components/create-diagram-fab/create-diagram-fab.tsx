@@ -9,7 +9,7 @@ type CreateDiagramFabProps = {
 };
 
 export const CreateDiagramFab = ({ onClick }: CreateDiagramFabProps) => (
-  <div className="sticky bottom-6 mt-6 flex justify-end">
+  <div className="fixed right-6 bottom-6 mt-6 flex justify-end md:sticky md:right-auto">
     <Button
       onClick={onClick}
       size="icon"

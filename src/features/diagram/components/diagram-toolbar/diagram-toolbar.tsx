@@ -92,40 +92,40 @@ export const DiagramToolbar = ({
                 </Tooltip>
               );
             })}
-
-            {group.includes('edge') && (
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label="Choose relation type"
-                        className="size-8 text-xs font-semibold"
-                      >
-                        {activeRelation.slice(0, 3).toUpperCase()}
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">Relation type</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent side="right" align="start">
-                  <DropdownMenuRadioGroup
-                    value={activeRelation}
-                    onValueChange={(v) => onSelectRelation(v as UmlRelation)}
-                  >
-                    {UML_RELATIONS.map((rel) => (
-                      <DropdownMenuRadioItem key={rel} value={rel}>
-                        {RELATION_LABEL[rel]}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
         ))}
+
+        <Separator className="my-0.5 w-6" />
+
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Choose relation type"
+                  className="size-8 text-xs font-semibold"
+                >
+                  {activeRelation.slice(0, 3).toUpperCase()}
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">Relation type</TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent side="right" align="start">
+            <DropdownMenuRadioGroup
+              value={activeRelation}
+              onValueChange={(v) => onSelectRelation(v as UmlRelation)}
+            >
+              {UML_RELATIONS.map((rel) => (
+                <DropdownMenuRadioItem key={rel} value={rel}>
+                  {RELATION_LABEL[rel]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Separator className="my-0.5 w-6" />
 

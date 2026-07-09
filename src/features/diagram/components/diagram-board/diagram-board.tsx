@@ -16,7 +16,7 @@ import { EditDiagramModal } from '../edit-diagram-modal';
 const FAVORITES_EMPTY_HEADING = 'No favorite diagrams yet';
 const FAVORITES_EMPTY_HINT = 'Star a diagram to see it here.';
 
-const FAVORITES_EMPTY_STATE = (
+const FavoritesEmptyState = () => (
   <div className="text-muted-foreground border-border col-span-full flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed py-12 text-center">
     <Star className="size-8 opacity-60" />
     <p className="text-foreground text-sm font-medium">{FAVORITES_EMPTY_HEADING}</p>
@@ -56,7 +56,7 @@ export const DiagramBoard = ({ diagrams, variant = 'all' }: DiagramBoardProps) =
         onEdit={openEdit}
         onToggleFavorite={handleToggleFavorite}
         onDelete={openDelete}
-        emptyState={isFavorites ? FAVORITES_EMPTY_STATE : undefined}
+        emptyState={isFavorites ? <FavoritesEmptyState /> : undefined}
       />
 
       <Show when={!isFavorites}>
