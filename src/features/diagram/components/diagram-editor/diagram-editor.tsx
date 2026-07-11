@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 
+import { ContentLayout } from '@/components/content-layout';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { DiagramCanvas } from '@/features/diagram/components/diagram-canvas';
 import { DiagramExport } from '@/features/diagram/components/diagram-export';
@@ -42,7 +44,7 @@ export const DiagramEditor = ({ id, title, visibility, nodes, edges }: DiagramEd
   }, [load]);
 
   return (
-    <div className="flex h-full w-full flex-col">
+    <ContentLayout>
       <DiagramTopbar
         leftSlot={
           <Button asChild variant="ghost" size="sm">
@@ -51,21 +53,24 @@ export const DiagramEditor = ({ id, title, visibility, nodes, edges }: DiagramEd
             </Link>
           </Button>
         }
+        rightSlot={<ThemeToggle className="ml-auto" />}
       />
-      <div className="flex-1 overflow-hidden">
-        <DiagramCanvas
-          topLeftPanel={<DiagramStatus status={save.status} onClick={() => save.saveNow()} />}
-          topCenterPanel={<DiagramTitle {...diagramTitle} />}
-          bottomLeftPanel={<DiagramZoomControlsPanel />}
-          topRightPanel={
-            <div className="flex items-center gap-1.5">
-              <DiagramShare id={id} initialVisibility={visibility} />
-              <DiagramExport title={diagramTitle.value} />
-            </div>
-          }
-        />
+      <div className="flex h-full w-full flex-col">
+        <div className="flex-1 overflow-hidden">
+          <DiagramCanvas
+            topLeftPanel={<DiagramStatus status={save.status} onClick={() => save.saveNow()} />}
+            topCenterPanel={<DiagramTitle {...diagramTitle} />}
+            bottomLeftPanel={<DiagramZoomControlsPanel />}
+            topRightPanel={
+              <div className="flex items-center gap-1.5">
+                <DiagramShare id={id} initialVisibility={visibility} />
+                <DiagramExport title={diagramTitle.value} />
+              </div>
+            }
+          />
+        </div>
+        <LeaveDiagramDialog {...leaveGuard} />
       </div>
-      <LeaveDiagramDialog {...leaveGuard} />
-    </div>
+    </ContentLayout>
   );
 };
