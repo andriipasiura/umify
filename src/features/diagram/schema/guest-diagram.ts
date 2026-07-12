@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { diagramContentSchema } from './diagram-content';
 import { diagramMetaSchema } from './diagram-meta';
 
-export const DEFAULT_GUEST_TITLE = 'Untitled diagram';
+export const DEFAULT_GUEST_TITLE = 'Untitled';
 
 export const guestDiagramSchema = z.object({
   version: z.literal(1),

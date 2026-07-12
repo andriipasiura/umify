@@ -19,9 +19,9 @@ export const DiagramShare = ({ id, initialVisibility }: DiagramShareProps) => {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="sm" aria-label="Share" onClick={() => setOpen(true)}>
         <Share2 />
-        Share
+        <span className="max-md:hidden">Share</span>
       </Button>
       <DiagramShareDialog
         open={open}

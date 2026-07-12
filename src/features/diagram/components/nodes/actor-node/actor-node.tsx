@@ -1,13 +1,11 @@
-import { Handle, type NodeProps, Position } from '@xyflow/react';
+import { type NodeProps } from '@xyflow/react';
 import { memo } from 'react';
 
 import { NodeInlineLabel } from '@/features/diagram/components/node-inline-label';
+import { NodeHandles } from '@/features/diagram/components/nodes/node-handles';
 import { useInlineLabel } from '@/features/diagram/hooks/use-inline-label';
 import { type UmlNode } from '@/features/diagram/types';
 import { cn } from '@/lib/utils';
-
-const HANDLE_CLASS =
-  '!size-1.5 !bg-primary !border-primary opacity-0 group-hover/node:opacity-100 transition-opacity';
 
 export const ActorNode = memo(({ id, data, selected }: NodeProps<UmlNode>) => {
   const { isEditing, onDoubleClick, inputProps } = useInlineLabel(id, data.label);
@@ -45,10 +43,7 @@ export const ActorNode = memo(({ id, data, selected }: NodeProps<UmlNode>) => {
         />
       </div>
 
-      <Handle type="source" position={Position.Top} id="top" className={HANDLE_CLASS} />
-      <Handle type="source" position={Position.Right} id="right" className={HANDLE_CLASS} />
-      <Handle type="source" position={Position.Bottom} id="bottom" className={HANDLE_CLASS} />
-      <Handle type="source" position={Position.Left} id="left" className={HANDLE_CLASS} />
+      <NodeHandles selected={selected} />
     </div>
   );
 });
