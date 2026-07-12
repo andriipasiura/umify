@@ -9,7 +9,8 @@ export type DiagramCardData = {
   tags: string[];
   isFavorite: boolean;
   updatedAt: Date;
-  thumbnail: string | null;
+  thumbnailLight: string | null;
+  thumbnailDark: string | null;
 };
 
 export const UML_NODE_KINDS = ['actor', 'usecase', 'boundary', 'note'] as const;

@@ -28,8 +28,8 @@ const unionRects = (a: Rect, b: Rect): Rect => {
   return { x, y, width: right - x, height: bottom - y };
 };
 
-const getEdgesBounds = (): Rect | null => {
-  const edgesG = document.querySelector<SVGGElement>('.react-flow__edges g');
+const getEdgesBounds = (root: ParentNode): Rect | null => {
+  const edgesG = root.querySelector<SVGGElement>('.react-flow__edges g');
   if (!edgesG) return null;
   try {
     const bbox = edgesG.getBBox();
@@ -63,15 +63,17 @@ export const captureDiagram = async ({
   format,
   transparent,
   nodes,
+  root = document,
 }: {
   format: ExportFormat;
   transparent: boolean;
   nodes: UmlNode[];
+  root?: ParentNode;
 }): Promise<string> => {
   if (nodes.length === 0) throw new EmptyDiagramError();
 
   const nodeBounds = getNodesBounds(nodes);
-  const edgeBounds = getEdgesBounds();
+  const edgeBounds = getEdgesBounds(root);
   const bounds = edgeBounds ? unionRects(nodeBounds, edgeBounds) : nodeBounds;
 
   const { width, height } = getExportDimensions(bounds);
@@ -84,7 +86,7 @@ export const captureDiagram = async ({
     EXPORT_PADDING_RATIO,
   );
 
-  const viewport = document.querySelector<HTMLElement>('.react-flow__viewport');
+  const viewport = root.querySelector<HTMLElement>('.react-flow__viewport');
   if (!viewport) throw new Error('React Flow viewport not found');
 
   const backgroundColor = resolveBackground(format, transparent);
