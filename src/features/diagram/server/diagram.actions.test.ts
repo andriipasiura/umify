@@ -199,42 +199,50 @@ describe('saveDiagramThumbnail', () => {
     revalidatePath.mockReset();
   });
 
+  const validThumbnail = {
+    light: 'data:image/png;base64,light',
+    dark: 'data:image/png;base64,dark',
+  };
+
   test('rejects when unauthenticated', async () => {
     requireUserMock.mockRejectedValue(new Error('Unauthorized'));
-    expect(saveDiagramThumbnail('d1', 'data:image/png;base64,abc')).rejects.toThrow('Unauthorized');
+    expect(saveDiagramThumbnail('d1', validThumbnail)).rejects.toThrow('Unauthorized');
   });
 
   test('returns validation error for an invalid data URL', async () => {
-    const result = await saveDiagramThumbnail('d1', 'data:image/jpeg;base64,abc');
+    const result = await saveDiagramThumbnail('d1', {
+      light: 'data:image/jpeg;base64,abc',
+      dark: null,
+    });
     expect(result).toMatchObject({ ok: false, error: 'Invalid input' });
     expect(setThumbnail).not.toHaveBeenCalled();
   });
 
   test('returns Not found when diagram does not exist', async () => {
     findOwner.mockResolvedValue(null);
-    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+    const result = await saveDiagramThumbnail('d1', validThumbnail);
     expect(result).toEqual({ ok: false, error: 'Not found' });
   });
 
   test('returns Forbidden for non-owner', async () => {
     findOwner.mockResolvedValue({ ownerId: 'other_user', isFavorite: false });
-    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+    const result = await saveDiagramThumbnail('d1', validThumbnail);
     expect(result).toEqual({ ok: false, error: 'Forbidden' });
     expect(setThumbnail).not.toHaveBeenCalled();
   });
 
-  test('saves the thumbnail and revalidates the lists for the owner', async () => {
-    const result = await saveDiagramThumbnail('d1', 'data:image/png;base64,abc');
+  test('saves both thumbnails and revalidates the lists for the owner', async () => {
+    const result = await saveDiagramThumbnail('d1', validThumbnail);
     expect(result).toEqual({ ok: true, data: undefined });
-    expect(setThumbnail).toHaveBeenCalledWith('d1', 'data:image/png;base64,abc');
+    expect(setThumbnail).toHaveBeenCalledWith('d1', validThumbnail);
     expect(revalidatePath).toHaveBeenCalledWith('/');
     expect(revalidatePath).toHaveBeenCalledWith('/favorites');
   });
 
-  test('clears the thumbnail when given null', async () => {
-    const result = await saveDiagramThumbnail('d1', null);
+  test('clears the thumbnails when given null for both', async () => {
+    const result = await saveDiagramThumbnail('d1', { light: null, dark: null });
     expect(result).toEqual({ ok: true, data: undefined });
-    expect(setThumbnail).toHaveBeenCalledWith('d1', null);
+    expect(setThumbnail).toHaveBeenCalledWith('d1', { light: null, dark: null });
   });
 });
 

@@ -208,24 +208,34 @@ describe('diagramRepository.setVisibility', () => {
 
 describe('diagramRepository.setThumbnail', () => {
   beforeEach(() => {
-    update.mockReset().mockResolvedValue({ id: 'd1', thumbnail: 'data:image/png;base64,abc' });
-  });
-
-  test('updates the thumbnail field', async () => {
-    await diagramRepository.setThumbnail('d1', 'data:image/png;base64,abc');
-
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'd1' },
-      data: { thumbnail: 'data:image/png;base64,abc' },
+    update.mockReset().mockResolvedValue({
+      id: 'd1',
+      thumbnailLight: 'data:image/png;base64,light',
+      thumbnailDark: 'data:image/png;base64,dark',
     });
   });
 
-  test('clears the thumbnail field with null', async () => {
-    await diagramRepository.setThumbnail('d1', null);
+  test('updates both thumbnail fields', async () => {
+    await diagramRepository.setThumbnail('d1', {
+      light: 'data:image/png;base64,light',
+      dark: 'data:image/png;base64,dark',
+    });
 
     expect(update).toHaveBeenCalledWith({
       where: { id: 'd1' },
-      data: { thumbnail: null },
+      data: {
+        thumbnailLight: 'data:image/png;base64,light',
+        thumbnailDark: 'data:image/png;base64,dark',
+      },
+    });
+  });
+
+  test('clears both thumbnail fields with null', async () => {
+    await diagramRepository.setThumbnail('d1', { light: null, dark: null });
+
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'd1' },
+      data: { thumbnailLight: null, thumbnailDark: null },
     });
   });
 });

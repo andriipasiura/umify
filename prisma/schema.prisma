@@ -58,19 +58,20 @@ enum Visibility {
 }
 
 model Diagram {
-  id         String     @id @default(cuid())
-  title      String
-  ownerId    String
-  version    Int        @default(1)
-  visibility Visibility @default(private)
-  category   String?
-  tags       String[]   @default([])
-  isFavorite Boolean    @default(false)
-  nodes      Json
-  edges      Json
-  thumbnail  String?    @db.Text
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id             String     @id @default(cuid())
+  title          String
+  ownerId        String
+  version        Int        @default(1)
+  visibility     Visibility @default(private)
+  category       String?
+  tags           String[]   @default([])
+  isFavorite     Boolean    @default(false)
+  nodes          Json
+  edges          Json
+  thumbnailLight String?    @db.Text
+  thumbnailDark  String?    @db.Text
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 

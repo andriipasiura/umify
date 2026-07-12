@@ -85,7 +85,7 @@ const DiagramCanvasInner = ({
   const layeredNodes = layerBoundariesFirst(nodes);
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full" data-diagram-capture-root>
       <UmlMarkers />
       <ReactFlow
         nodes={layeredNodes}

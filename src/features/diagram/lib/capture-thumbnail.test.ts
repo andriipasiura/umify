@@ -95,7 +95,15 @@ describe('downscaleImage', () => {
   });
 });
 
+const SCHEME_VARS: Record<'light' | 'dark', Record<string, string>> = {
+  light: { '--background': 'white', '--foreground': 'black', '--primary': 'blue' },
+  dark: { '--background': 'black', '--foreground': 'white', '--primary': 'skyblue' },
+};
+
 describe('captureThumbnail', () => {
+  let captureRoot: HTMLDivElement;
+  let realGetComputedStyle: typeof window.getComputedStyle;
+
   beforeEach(() => {
     naturalSize = { width: 1200, height: 800 };
     failImageLoad = false;
@@ -109,28 +117,33 @@ describe('captureThumbnail', () => {
       return `data:image/png;base64,resized-${this.width}x${this.height}`;
     });
     vi.mocked(captureDiagram).mockReset();
+    document.documentElement.classList.remove('dark');
+
+    realGetComputedStyle = window.getComputedStyle;
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((el, ...rest) => {
+      if (el === document.documentElement) {
+        const scheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        const vars = SCHEME_VARS[scheme];
+        return { getPropertyValue: (prop: string) => vars[prop] ?? '' } as CSSStyleDeclaration;
+      }
+      return realGetComputedStyle(el, ...rest);
+    });
+
+    captureRoot = document.createElement('div');
+    captureRoot.setAttribute('data-diagram-capture-root', '');
+    document.body.appendChild(captureRoot);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    document.body.removeChild(captureRoot);
+    document.documentElement.classList.remove('dark');
   });
 
-  it('returns null when the diagram is empty', async () => {
+  it('returns null for both schemes when the diagram is empty', async () => {
     vi.mocked(captureDiagram).mockRejectedValue(new EmptyDiagramError());
-    await expect(captureThumbnail([])).resolves.toBeNull();
-  });
-
-  it('captures as a transparent png and downscales the result', async () => {
-    vi.mocked(captureDiagram).mockResolvedValue('data:image/png;base64,raw');
-    const nodes = [makeNode('1')];
-
-    const result = await captureThumbnail(nodes);
-
-    expect(captureDiagram).toHaveBeenCalledWith({ format: 'png', transparent: true, nodes });
-    expect(result).toBe(
-      `data:image/png;base64,resized-${THUMBNAIL_MAX_WIDTH}x${THUMBNAIL_MAX_HEIGHT}`,
-    );
+    await expect(captureThumbnail([])).resolves.toEqual({ light: null, dark: null });
   });
 
   it('rethrows non-empty-diagram capture errors', async () => {
@@ -138,10 +151,93 @@ describe('captureThumbnail', () => {
     await expect(captureThumbnail([makeNode('1')])).rejects.toThrow('viewport not found');
   });
 
-  it('downscales without a lossy quality argument', async () => {
-    vi.mocked(captureDiagram).mockResolvedValue('data:image/png;base64,raw');
-    const toDataURLSpy = vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL');
+  it('captures the live scheme directly and downscales both results', async () => {
+    vi.mocked(captureDiagram)
+      .mockResolvedValueOnce('data:image/png;base64,raw-live')
+      .mockResolvedValueOnce('data:image/png;base64,raw-other');
+    const nodes = [makeNode('1')];
+
+    const result = await captureThumbnail(nodes);
+
+    expect(captureDiagram).toHaveBeenNthCalledWith(1, { format: 'png', transparent: true, nodes });
+    expect(result).toEqual({
+      light: `data:image/png;base64,resized-${THUMBNAIL_MAX_WIDTH}x${THUMBNAIL_MAX_HEIGHT}`,
+      dark: `data:image/png;base64,resized-${THUMBNAIL_MAX_WIDTH}x${THUMBNAIL_MAX_HEIGHT}`,
+    });
+  });
+
+  it("renders the off-screen capture with the other scheme's real colors, positioned off-screen, and removes it afterward", async () => {
+    document.documentElement.classList.remove('dark');
+    let capturedContainer: HTMLElement | null = null;
+    let observedForeground: string | null = null;
+
+    vi.mocked(captureDiagram).mockImplementation(async ({ root }) => {
+      if (root && root !== document) {
+        capturedContainer = root as HTMLElement;
+        const clone = capturedContainer.firstElementChild as HTMLElement;
+        observedForeground = clone.style.getPropertyValue('--foreground');
+        expect(capturedContainer.parentNode).toBe(document.body);
+        expect(capturedContainer.style.left).toBe('-10000px');
+      }
+      return 'data:image/png;base64,raw';
+    });
+
     await captureThumbnail([makeNode('1')]);
-    expect(toDataURLSpy).toHaveBeenCalledWith('image/png');
+
+    expect(observedForeground).toBe(SCHEME_VARS.dark['--foreground']);
+    expect(document.body.contains(capturedContainer)).toBe(false);
+  });
+
+  it("picks the dark scheme's real colors for the off-screen clone when the app is in dark mode", async () => {
+    document.documentElement.classList.add('dark');
+    let observedForeground: string | null = null;
+
+    vi.mocked(captureDiagram).mockImplementation(async ({ root }) => {
+      if (root && root !== document) {
+        const clone = (root as HTMLElement).firstElementChild as HTMLElement;
+        observedForeground = clone.style.getPropertyValue('--foreground');
+      }
+      return 'data:image/png;base64,raw';
+    });
+
+    await captureThumbnail([makeNode('1')]);
+
+    expect(observedForeground).toBe(SCHEME_VARS.light['--foreground']);
+  });
+
+  it('rewrites duplicate marker ids inside the clone so refs do not resolve to the live marker', async () => {
+    captureRoot.innerHTML = `
+      <svg><defs><marker id="uml-arrow"></marker></defs></svg>
+      <path marker-end="url(#uml-arrow)"></path>
+    `;
+
+    vi.mocked(captureDiagram).mockImplementation(async ({ root }) => {
+      if (root && root !== document) {
+        const clone = (root as HTMLElement).firstElementChild as HTMLElement;
+        const marker = clone.querySelector('marker');
+        const path = clone.querySelector('path');
+        expect(marker?.id).toBe('uml-arrow-thumb-dark');
+        expect(path?.getAttribute('marker-end')).toBe('url(#uml-arrow-thumb-dark)');
+      }
+      return 'data:image/png;base64,raw';
+    });
+
+    await captureThumbnail([makeNode('1')]);
+  });
+
+  it('falls back to a plain capture when no capture root is present in the document', async () => {
+    document.body.removeChild(captureRoot);
+    vi.mocked(captureDiagram).mockResolvedValue('data:image/png;base64,raw');
+
+    await captureThumbnail([makeNode('1')]);
+
+    expect(captureDiagram).toHaveBeenCalledTimes(2);
+    for (const [args] of vi.mocked(captureDiagram).mock.calls) {
+      expect(args.root).toBeUndefined();
+    }
+
+    captureRoot = document.createElement('div');
+    captureRoot.setAttribute('data-diagram-capture-root', '');
+    document.body.appendChild(captureRoot);
   });
 });

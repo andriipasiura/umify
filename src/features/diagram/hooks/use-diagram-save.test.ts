@@ -44,7 +44,10 @@ beforeEach(() => {
   useDiagramStore.getState().load({ nodes: [], edges: [] });
   saveDiagramContentMock.mockReset().mockResolvedValue({ ok: true, data: undefined });
   saveDiagramThumbnailMock.mockReset().mockResolvedValue({ ok: true, data: undefined });
-  captureThumbnailMock.mockReset().mockResolvedValue('data:image/png;base64,abc');
+  captureThumbnailMock.mockReset().mockResolvedValue({
+    light: 'data:image/png;base64,light',
+    dark: 'data:image/png;base64,dark',
+  });
   toastErrorMock.mockReset();
   prefsMock.autoSave = true;
   prefsMock.autoSaveInterval = 30;
@@ -185,18 +188,21 @@ describe('useDiagramSave', () => {
     expect(captureThumbnailMock).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ id: 'n1' })]),
     );
-    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', 'data:image/png;base64,abc');
+    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', {
+      light: 'data:image/png;base64,light',
+      dark: 'data:image/png;base64,dark',
+    });
   });
 
   test('clears the thumbnail when the diagram is empty', async () => {
-    captureThumbnailMock.mockResolvedValue(null);
+    captureThumbnailMock.mockResolvedValue({ light: null, dark: null });
     const { result } = renderHook(() => useDiagramSave('d1'));
 
     await act(async () => {
       await result.current.saveNow();
     });
 
-    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', null);
+    expect(saveDiagramThumbnailMock).toHaveBeenCalledWith('d1', { light: null, dark: null });
   });
 
   test('does not capture a thumbnail when the content save fails', async () => {
