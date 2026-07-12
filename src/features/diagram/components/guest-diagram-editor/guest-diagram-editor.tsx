@@ -61,13 +61,13 @@ export const GuestDiagramEditor = ({ signInSlot }: GuestDiagramEditorProps) => {
           bottomLeftPanel={<DiagramZoomControlsPanel />}
           topRightPanel={
             <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={promptSignIn}>
+              <Button variant="outline" size="sm" aria-label="Share" onClick={promptSignIn}>
                 <Share2 />
-                Share
+                <span className="max-md:hidden">Share</span>
               </Button>
-              <Button variant="outline" size="sm" onClick={promptSignIn}>
+              <Button variant="outline" size="sm" aria-label="Export" onClick={promptSignIn}>
                 <Download />
-                Export
+                <span className="max-md:hidden">Export</span>
               </Button>
             </div>
           }

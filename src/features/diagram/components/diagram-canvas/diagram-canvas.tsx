@@ -112,8 +112,25 @@ const DiagramCanvasInner = ({
         proOptions={{ hideAttribution: true }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} className="bg-muted/20" />
-        <Panel position="center-left">
+        <Panel position="center-left" className="max-md:hidden">
           <DiagramToolbar
+            tool={tool}
+            onSelectTool={setTool}
+            activeRelation={activeRelation}
+            onSelectRelation={setActiveRelation}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={past.length > 0}
+            canRedo={future.length > 0}
+          />
+        </Panel>
+        <Panel
+          position="bottom-left"
+          className="!inset-x-[15px] !bottom-[15px] !mx-auto !my-0 !w-fit md:hidden"
+        >
+          <DiagramToolbar
+            orientation="horizontal"
+            className="nopan max-w-[calc(100vw-30px)] touch-pan-x [scrollbar-width:none] overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]"
             tool={tool}
             onSelectTool={setTool}
             activeRelation={activeRelation}
@@ -128,13 +145,17 @@ const DiagramCanvasInner = ({
           pannable
           zoomable
           nodeColor={(node) => miniMapNodeColor(node as UmlNode)}
-          className="!bg-background rounded-md border"
+          className="!bg-background rounded-md border max-md:hidden"
           maskColor="var(--muted)"
         />
         {topLeftPanel && <Panel position="top-left">{topLeftPanel}</Panel>}
         {topCenterPanel && <Panel position="top-center">{topCenterPanel}</Panel>}
         {topRightPanel && <Panel position="top-right">{topRightPanel}</Panel>}
-        {bottomLeftPanel && <Panel position="bottom-left">{bottomLeftPanel}</Panel>}
+        {bottomLeftPanel && (
+          <Panel position="bottom-left" className="max-md:hidden">
+            {bottomLeftPanel}
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   );

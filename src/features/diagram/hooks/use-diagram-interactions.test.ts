@@ -34,7 +34,7 @@ beforeEach(() => {
 
 describe('useDiagramInteractions', () => {
   describe('onPaneClick', () => {
-    test('places a node when a node tool is active and reverts to select', () => {
+    test('places a node when a node tool is active and keeps the tool active', () => {
       useEditorStore.setState({ tool: 'actor' });
       const { result } = renderHook(() => useDiagramInteractions());
 
@@ -42,7 +42,17 @@ describe('useDiagramInteractions', () => {
 
       expect(useDiagramStore.getState().nodes).toHaveLength(1);
       expect(useDiagramStore.getState().nodes[0].type).toBe('actor');
-      expect(useEditorStore.getState().tool).toBe('select');
+      expect(useEditorStore.getState().tool).toBe('actor');
+    });
+
+    test('places multiple nodes on repeated taps without switching tools', () => {
+      useEditorStore.setState({ tool: 'usecase' });
+      const { result } = renderHook(() => useDiagramInteractions());
+
+      act(() => result.current.onPaneClick(makeMouseEvent(10, 10)));
+      act(() => result.current.onPaneClick(makeMouseEvent(80, 80)));
+
+      expect(useDiagramStore.getState().nodes).toHaveLength(2);
     });
 
     test('does nothing when select tool is active', () => {

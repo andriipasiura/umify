@@ -1,3 +1,5 @@
+import { createId } from '@/lib/utils';
+
 import { type UmlNode, type UmlNodeKind } from '../types';
 
 const DEFAULT_LABEL: Record<UmlNodeKind, string> = {
@@ -15,7 +17,7 @@ const DEFAULT_SIZE: Partial<Record<UmlNodeKind, { width: number; height: number 
 export const createUmlNode = (kind: UmlNodeKind, position: { x: number; y: number }): UmlNode => {
   const size = DEFAULT_SIZE[kind];
   return {
-    id: crypto.randomUUID(),
+    id: createId(),
     type: kind,
     position,
     data: { kind, label: DEFAULT_LABEL[kind] },

@@ -20,7 +20,7 @@ export const DiagramTitle = ({
     when={isEditing}
     fallback={
       <span
-        className={cn(pillClass, 'block max-w-64 cursor-text truncate', className)}
+        className={cn(pillClass, 'block max-w-36 cursor-text truncate md:max-w-64', className)}
         onDoubleClick={onDoubleClick}
         title={value}
       >
@@ -30,7 +30,7 @@ export const DiagramTitle = ({
   >
     <input
       {...inputProps}
-      className={cn(pillClass, 'w-64 min-w-0 text-center outline-none', className)}
+      className={cn(pillClass, 'w-48 min-w-0 text-center outline-none md:w-64', className)}
     />
   </Show>
 );

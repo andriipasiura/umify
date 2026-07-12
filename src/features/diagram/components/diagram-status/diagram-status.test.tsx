@@ -11,6 +11,6 @@ describe('DiagramStatus', () => {
     ['saved', 'Saved'],
   ] as const)('renders correct label for status "%s"', (status, label) => {
     render(<DiagramStatus status={status} />);
-    expect(screen.getByText(label)).toBeDefined();
+    expect(screen.getAllByText(label).length).toBeGreaterThan(0);
   });
 });

@@ -35,7 +35,6 @@ type InteractionProps = {
 export const useDiagramInteractions = (): InteractionProps => {
   const { screenToFlowPosition } = useReactFlow();
   const tool = useEditorStore((s) => s.tool);
-  const setTool = useEditorStore((s) => s.setTool);
   const { addNode, deleteNode, deleteEdge } = useDiagramStore(
     useShallow((s) => ({
       addNode: s.addNode,
@@ -48,7 +47,6 @@ export const useDiagramInteractions = (): InteractionProps => {
     if (!isNodeTool(tool)) return;
     const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
     addNode(createUmlNode(tool as UmlNodeKind, pos));
-    setTool(TOOL_SELECT);
   };
 
   const onNodeClick = (_e: ReactMouseEvent, node: Node) => {

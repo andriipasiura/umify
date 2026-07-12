@@ -12,7 +12,7 @@ type DiagramStatusProps = {
 };
 
 export const DiagramStatus = ({ status, onClick, className }: DiagramStatusProps) => {
-  const { dot, pulse, label, pill } = STATUS_CONFIG[status];
+  const { dot, pulse, label, shortLabel, pill } = STATUS_CONFIG[status];
 
   return (
     <button
@@ -32,7 +32,8 @@ export const DiagramStatus = ({ status, onClick, className }: DiagramStatusProps
         aria-hidden
         className={cn('size-1.5 shrink-0 rounded-full', dot, pulse && 'animate-pulse')}
       />
-      {label}
+      <span className="hidden md:inline">{label}</span>
+      <span className="md:hidden">{shortLabel}</span>
     </button>
   );
 };

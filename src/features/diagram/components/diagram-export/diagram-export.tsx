@@ -27,9 +27,9 @@ export const DiagramExport = ({ title }: DiagramExportProps) => {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="sm" aria-label="Export" onClick={() => setOpen(true)}>
         <Download />
-        Export
+        <span className="max-md:hidden">Export</span>
       </Button>
       <DiagramExportDialog
         open={open}
