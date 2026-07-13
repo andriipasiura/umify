@@ -30,16 +30,18 @@ export const AutoSaveSettings = () => {
               key={opt.value}
               type="button"
               disabled={!autoSave}
+              aria-label={opt.label}
               onClick={() => setAutoSaveInterval(opt.value as AutoSaveInterval)}
               className={cn(
-                'rounded-md px-3 py-1 text-xs font-medium transition-colors',
+                'flex-1 cursor-pointer rounded-md px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors',
                 'disabled:cursor-not-allowed disabled:opacity-40',
                 autoSaveInterval === opt.value
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-muted',
               )}
             >
-              {opt.label}
+              <span className="sm:hidden">{opt.shortLabel}</span>
+              <span className="hidden sm:inline">{opt.label}</span>
             </button>
           ))}
         </div>
