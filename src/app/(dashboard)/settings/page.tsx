@@ -22,7 +22,7 @@ export default async function SettingsPage() {
         <ThemeModeToggle />
       </SettingsSection>
 
-      <SettingsSection title="Themes">
+      <SettingsSection title="Themes" withWrapper={false}>
         <ColorThemePicker />
       </SettingsSection>
 

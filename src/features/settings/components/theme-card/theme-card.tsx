@@ -23,7 +23,7 @@ export const ThemeCard = ({ theme, selected, onSelect }: ThemeCardProps) => {
       type="button"
       onClick={onSelect}
       className={cn(
-        'group hover:border-primary/50 focus-visible:ring-ring relative flex flex-col gap-2 rounded-lg border-2 p-3 text-left transition-all focus-visible:ring-2 focus-visible:outline-none',
+        'group hover:border-primary/50 focus-visible:ring-ring relative flex cursor-pointer flex-col gap-2 rounded-lg border-2 p-3 text-left transition-all focus-visible:ring-2 focus-visible:outline-none',
         selected ? 'border-primary' : 'border-border',
       )}
       aria-pressed={selected}
