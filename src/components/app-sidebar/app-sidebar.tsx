@@ -14,6 +14,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { DASHBOARD_NAV_ITEMS, type DashboardNavItem } from '@/lib/constants/navigation';
@@ -43,6 +44,11 @@ export const AppSidebar = ({
   className,
 }: AppSidebarProps) => {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const closeOnMobile = () => {
+    if (isMobile) setOpenMobile(false);
+  };
 
   return (
     <TooltipProvider>
@@ -66,7 +72,7 @@ export const AppSidebar = ({
                     isActive={isItemActive(pathname, item.href)}
                     tooltip={item.label}
                   >
-                    <Link href={item.href}>
+                    <Link href={item.href} onClick={closeOnMobile}>
                       <Icon />
                       <span>{item.label}</span>
                     </Link>
