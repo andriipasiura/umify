@@ -1,5 +1,7 @@
 import { type ReactNode } from 'react';
 
+import { UmifyMark } from '@/components/icons/umify-mark';
+import { PrivacyPolicyNotice } from '@/components/privacy-policy-notice';
 import {
   Dialog,
   DialogContent,
@@ -19,12 +21,18 @@ type GuestSignInDialogProps = {
 
 export const GuestSignInDialog = ({ open, onOpenChange, children }: GuestSignInDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{TITLE}</DialogTitle>
-        <DialogDescription>{DESCRIPTION}</DialogDescription>
+    <DialogContent className="gap-6 p-8">
+      <DialogHeader className="items-center gap-4 text-center">
+        <UmifyMark className="ring-foreground/10 shadow-primary/25 size-12 rounded-lg text-2xl shadow-lg ring-1" />
+        <div className="flex flex-col gap-1.5">
+          <DialogTitle className="text-2xl leading-tight">{TITLE}</DialogTitle>
+          <DialogDescription className="text-balance">{DESCRIPTION}</DialogDescription>
+        </div>
       </DialogHeader>
-      <div className="flex flex-col gap-3">{children}</div>
+      <div className="flex flex-col gap-3">
+        {children}
+        <PrivacyPolicyNotice terms="By signing in, you agree to the" className="mt-2" />
+      </div>
     </DialogContent>
   </Dialog>
 );
