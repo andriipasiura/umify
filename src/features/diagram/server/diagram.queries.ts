@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { cache } from 'react';
+
 import { requireUser } from '@/lib/auth/require-user';
 
 import {
@@ -63,7 +65,7 @@ export type PublicDiagram = {
   edges: DiagramContent['edges'];
 };
 
-export const getPublicDiagram = async (id: string): Promise<PublicDiagram | null> => {
+export const getPublicDiagram = cache(async (id: string): Promise<PublicDiagram | null> => {
   const row = await diagramRepository.findPublicById(id);
   if (!row) return null;
 
@@ -76,7 +78,7 @@ export const getPublicDiagram = async (id: string): Promise<PublicDiagram | null
   const content = parsed.success ? parsed.data : EMPTY_DIAGRAM_CONTENT;
 
   return { id: row.id, title: row.title, nodes: content.nodes, edges: content.edges };
-};
+});
 
 export const getDiagramForEdit = async (id: string): Promise<DiagramForEdit | null> => {
   const user = await requireUser();

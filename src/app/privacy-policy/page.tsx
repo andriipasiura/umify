@@ -7,7 +7,7 @@ const HEADING = 'Privacy Policy';
 const SUBTITLE = 'What UmiFy stores, why it stores it, and how to get rid of it.';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — UmiFy',
+  title: 'Privacy Policy',
   description: 'How UmiFy collects, uses, and stores your data.',
 };
 

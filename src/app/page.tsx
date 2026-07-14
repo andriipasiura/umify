@@ -17,11 +17,30 @@ import {
 } from '@/features/diagram/client';
 import { getDiagramsList, listMyTags, loadDiagramFilters } from '@/features/diagram/server';
 import { toSessionUser } from '@/lib/auth/session-user';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/constants/site';
 
 const HEADING = 'My Diagrams';
 const SUBTITLE = 'Build, manage, and iterate on your use case diagrams — all in one place.';
 
 const SIDEBAR_STATE_COOKIE = 'sidebar_state';
+
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: SITE_NAME,
+  url: SITE_URL,
+  description: SITE_DESCRIPTION,
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Web',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+
+const JsonLd = () => (
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+  />
+);
 
 type HomePageProps = {
   searchParams: Promise<SearchParams>;
@@ -33,6 +52,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   if (!session?.user) {
     return (
       <div className="h-svh overflow-hidden">
+        <JsonLd />
         <GuestDiagramEditor
           signInSlot={
             <>
@@ -60,6 +80,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <DashboardShell user={user} signOutAction={signOutAction} defaultOpen={defaultOpen}>
+      <JsonLd />
       <GuestDiagramMigrator />
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-6">
         <PageHeader title={HEADING} subtitle={SUBTITLE} className="mt-20" />

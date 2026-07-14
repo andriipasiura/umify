@@ -51,7 +51,7 @@ export const DiagramCard = ({
         className,
       )}
     >
-      <div className="bg-accent/50 relative flex h-28 items-center justify-center">
+      <div className="bg-accent/15 relative flex h-28 items-center justify-center">
         <Link
           href={routes.diagram(diagram.id)}
           className="focus-visible:ring-ring absolute inset-0 flex items-center justify-center focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset"
