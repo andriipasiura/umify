@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+
 import { PageHeader } from '@/components/page-header';
 import {
   AutoSaveSettings,
@@ -10,6 +12,8 @@ import { requireUser } from '@/lib/auth/require-user';
 
 const HEADING = 'Settings';
 const SUBTITLE = 'Adjust appearance, themes, and editor behavior — create your perfect workspace.';
+
+export const metadata: Metadata = { title: HEADING };
 
 export default async function SettingsPage() {
   const user = await requireUser();

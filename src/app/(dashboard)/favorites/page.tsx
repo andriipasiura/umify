@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { type SearchParams } from 'nuqs/server';
 import { Suspense } from 'react';
 
@@ -8,6 +9,8 @@ import { getFavoriteDiagramsList, listMyTags, loadDiagramFilters } from '@/featu
 
 const HEADING = 'Favorites';
 const SUBTITLE = "Diagrams you've starred — your most important work, always within reach.";
+
+export const metadata: Metadata = { title: HEADING };
 
 type FavoritesPageProps = {
   searchParams: Promise<SearchParams>;
