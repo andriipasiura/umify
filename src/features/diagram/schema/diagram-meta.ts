@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const diagramMetaSchema = z.object({
   title: z.string().trim().min(1, 'Title is required').max(120, 'Max 120 characters'),

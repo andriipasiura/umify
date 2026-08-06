@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { UML_EDGE_TYPE, UML_NODE_KINDS, UML_RELATIONS } from '../types';
 

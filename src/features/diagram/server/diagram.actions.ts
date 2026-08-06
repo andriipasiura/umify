@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { requireUser } from '@/lib/auth/require-user';
 import { errors } from '@/lib/constants/errors';
