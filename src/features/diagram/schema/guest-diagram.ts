@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { diagramContentSchema } from './diagram-content';
 import { diagramMetaSchema } from './diagram-meta';

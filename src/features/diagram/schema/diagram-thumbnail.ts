@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const THUMBNAIL_MAX_LENGTH = 262_144;
 
