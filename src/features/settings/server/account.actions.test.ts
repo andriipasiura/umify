@@ -7,7 +7,7 @@ const { requireUserMock, deleteUser, signOutMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/lib/auth/require-user', () => ({ requireUser: requireUserMock }));
-vi.mock('@/lib/db', () => ({ db: { user: { delete: deleteUser } } }));
+vi.mock('./account.repository', () => ({ accountRepository: { remove: deleteUser } }));
 vi.mock('@/auth', () => ({ signOut: signOutMock }));
 
 import { deleteAccount } from './account.actions';
@@ -26,7 +26,7 @@ describe('deleteAccount', () => {
 
   test('deletes the authenticated user by id', async () => {
     await deleteAccount();
-    expect(deleteUser).toHaveBeenCalledWith({ where: { id: 'user_1' } });
+    expect(deleteUser).toHaveBeenCalledWith('user_1');
   });
 
   test('signs out after deletion', async () => {

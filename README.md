@@ -20,7 +20,7 @@
 - **Framework:** Next.js 16 (App Router), React 19, TypeScript
 - **UI:** Tailwind CSS 4, shadcn/ui, @xyflow/react
 - **State:** Zustand, nuqs
-- **Data:** Prisma + PostgreSQL, Auth.js v5, Zod
+- **Data:** Drizzle ORM + PostgreSQL, Auth.js v5, Zod
 - **Testing:** Vitest, React Testing Library
 
 ## Getting started

@@ -1,13 +1,16 @@
-import { PrismaClient } from '@prisma/client';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 
 import { env } from '@/env';
 
 declare global {
-  var prismaGlobal: PrismaClient | undefined;
+  var pgPoolGlobal: Pool | undefined;
 }
 
-export const db = globalThis.prismaGlobal ?? new PrismaClient();
+const pool = globalThis.pgPoolGlobal ?? new Pool({ connectionString: env.DATABASE_URL });
 
 if (env.NODE_ENV !== 'production') {
-  globalThis.prismaGlobal = db;
+  globalThis.pgPoolGlobal = pool;
 }
+
+export const db = drizzle({ client: pool });
