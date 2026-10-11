@@ -1,5 +1,6 @@
-import { type Visibility } from '@prisma/client';
 import { type Edge, type Node } from '@xyflow/react';
+
+import { type Visibility } from '@/lib/db/schema';
 
 export type DiagramCardData = {
   id: string;

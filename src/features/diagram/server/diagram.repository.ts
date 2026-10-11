@@ -1,150 +1,179 @@
 import 'server-only';
 
-import { type Prisma } from '@prisma/client';
+import { and, arrayOverlaps, asc, desc, eq, ilike, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
+import { diagrams, type Visibility } from '@/lib/db/schema';
 
 import { type DiagramFilters } from '../search/diagram-filters';
 
-type JsonValue = Prisma.InputJsonValue;
+type DiagramMeta = {
+  title: string;
+  category: string | null;
+  tags: string[];
+  visibility: Visibility;
+};
 
-const DIAGRAM_CARD_SELECT = {
-  id: true,
-  title: true,
-  visibility: true,
-  category: true,
-  tags: true,
-  isFavorite: true,
-  updatedAt: true,
-  thumbnailLight: true,
-  thumbnailDark: true,
-} satisfies Prisma.DiagramSelect;
+type DiagramContent = { nodes: unknown; edges: unknown };
 
-const buildWhere = (ownerId: string, filters: DiagramFilters): Prisma.DiagramWhereInput => ({
-  ownerId,
-  ...(filters.visibility !== 'all' && { visibility: filters.visibility }),
-  ...(filters.search && {
-    title: { contains: filters.search, mode: 'insensitive' },
-  }),
-  ...(filters.tags.length > 0 && { tags: { hasSome: filters.tags } }),
-});
+const DIAGRAM_CARD_COLUMNS = {
+  id: diagrams.id,
+  title: diagrams.title,
+  visibility: diagrams.visibility,
+  category: diagrams.category,
+  tags: diagrams.tags,
+  isFavorite: diagrams.isFavorite,
+  updatedAt: diagrams.updatedAt,
+  thumbnailLight: diagrams.thumbnailLight,
+  thumbnailDark: diagrams.thumbnailDark,
+};
+
+const DIAGRAM_ID_COLUMN = { id: diagrams.id };
 
 const SORT_ORDERS = {
-  recent: { updatedAt: 'desc' },
-  oldest: { createdAt: 'asc' },
-  title: { title: 'asc' },
-  'title-desc': { title: 'desc' },
-} as const satisfies Record<DiagramFilters['sort'], Prisma.DiagramOrderByWithRelationInput>;
+  recent: desc(diagrams.updatedAt),
+  oldest: asc(diagrams.createdAt),
+  title: asc(diagrams.title),
+  'title-desc': desc(diagrams.title),
+} satisfies Record<DiagramFilters['sort'], SQL>;
 
-const buildOrderBy = (sort: DiagramFilters['sort']): Prisma.DiagramOrderByWithRelationInput =>
-  SORT_ORDERS[sort];
+const escapeLike = (value: string): string => value.replace(/[\\%_]/g, '\\$&');
+
+const buildWhere = (ownerId: string, filters: DiagramFilters) =>
+  and(
+    eq(diagrams.ownerId, ownerId),
+    filters.visibility !== 'all' ? eq(diagrams.visibility, filters.visibility) : undefined,
+    filters.search ? ilike(diagrams.title, `%${escapeLike(filters.search)}%`) : undefined,
+    filters.tags.length > 0 ? arrayOverlaps(diagrams.tags, filters.tags) : undefined,
+  );
+
+const firstOrNull = <T>(rows: T[]): T | null => rows[0] ?? null;
+
+const firstOrThrow = <T>(rows: T[]): T => {
+  const row = firstOrNull(rows);
+  if (row === null) throw new Error('Diagram not found');
+  return row;
+};
+
+const selectCards = (where: SQL | undefined, sort: DiagramFilters['sort']) =>
+  db.select(DIAGRAM_CARD_COLUMNS).from(diagrams).where(where).orderBy(SORT_ORDERS[sort]);
+
+const updateById = (id: string, data: Partial<typeof diagrams.$inferInsert>) =>
+  db.update(diagrams).set(data).where(eq(diagrams.id, id));
 
 export const diagramRepository = {
   findByOwner: (ownerId: string, filters: DiagramFilters) =>
-    db.diagram.findMany({
-      where: buildWhere(ownerId, filters),
-      orderBy: buildOrderBy(filters.sort),
-      select: DIAGRAM_CARD_SELECT,
-    }),
+    selectCards(buildWhere(ownerId, filters), filters.sort),
 
-  countByOwner: (ownerId: string) => db.diagram.count({ where: { ownerId } }),
+  countByOwner: (ownerId: string) => db.$count(diagrams, eq(diagrams.ownerId, ownerId)),
 
   findFavoritesByOwner: (ownerId: string, filters: DiagramFilters) =>
-    db.diagram.findMany({
-      where: { ...buildWhere(ownerId, filters), isFavorite: true },
-      orderBy: buildOrderBy(filters.sort),
-      select: DIAGRAM_CARD_SELECT,
-    }),
+    selectCards(and(buildWhere(ownerId, filters), eq(diagrams.isFavorite, true)), filters.sort),
 
   countFavoritesByOwner: (ownerId: string) =>
-    db.diagram.count({ where: { ownerId, isFavorite: true } }),
+    db.$count(diagrams, and(eq(diagrams.ownerId, ownerId), eq(diagrams.isFavorite, true))),
 
   distinctTags: async (ownerId: string, isFavorite?: boolean): Promise<string[]> => {
-    const rows = await db.diagram.findMany({
-      where: { ownerId, isFavorite },
-      select: { tags: true },
-    });
+    const rows = await db
+      .select({ tags: diagrams.tags })
+      .from(diagrams)
+      .where(
+        and(
+          eq(diagrams.ownerId, ownerId),
+          isFavorite === undefined ? undefined : eq(diagrams.isFavorite, isFavorite),
+        ),
+      );
     return [...new Set(rows.flatMap((row) => row.tags))].sort();
   },
 
-  findOwner: (id: string) =>
-    db.diagram.findUnique({ where: { id }, select: { ownerId: true, isFavorite: true } }),
+  findOwner: async (id: string) =>
+    firstOrNull(
+      await db
+        .select({ ownerId: diagrams.ownerId, isFavorite: diagrams.isFavorite })
+        .from(diagrams)
+        .where(eq(diagrams.id, id))
+        .limit(1),
+    ),
 
-  create: (
-    ownerId: string,
-    data: {
-      title: string;
-      category: string | null;
-      tags: string[];
-      visibility: 'public' | 'private';
-    },
-  ) =>
-    db.diagram.create({
-      data: { ...data, ownerId, nodes: [], edges: [] },
-      select: DIAGRAM_CARD_SELECT,
-    }),
+  create: async (ownerId: string, data: DiagramMeta) =>
+    firstOrThrow(
+      await db
+        .insert(diagrams)
+        .values({ ...data, ownerId, nodes: [], edges: [] })
+        .returning(DIAGRAM_CARD_COLUMNS),
+    ),
 
-  createWithContent: (
-    ownerId: string,
-    data: { title: string; nodes: JsonValue; edges: JsonValue },
-  ) =>
-    db.diagram.create({
-      data: {
-        ...data,
-        ownerId,
-        category: null,
-        tags: [],
-        visibility: 'private',
-      },
-      select: { id: true },
-    }),
+  createWithContent: async (ownerId: string, data: { title: string } & DiagramContent) =>
+    firstOrThrow(
+      await db
+        .insert(diagrams)
+        .values({ ...data, ownerId, category: null, tags: [], visibility: 'private' })
+        .returning(DIAGRAM_ID_COLUMN),
+    ),
 
-  updateMeta: (
+  updateMeta: async (id: string, data: DiagramMeta) =>
+    firstOrThrow(await updateById(id, data).returning(DIAGRAM_CARD_COLUMNS)),
+
+  remove: async (id: string): Promise<void> => {
+    await db.delete(diagrams).where(eq(diagrams.id, id));
+  },
+
+  setFavorite: async (id: string, isFavorite: boolean) =>
+    firstOrThrow(await updateById(id, { isFavorite }).returning(DIAGRAM_CARD_COLUMNS)),
+
+  findPublicById: async (id: string) =>
+    firstOrNull(
+      await db
+        .select({
+          id: diagrams.id,
+          title: diagrams.title,
+          nodes: diagrams.nodes,
+          edges: diagrams.edges,
+        })
+        .from(diagrams)
+        .where(and(eq(diagrams.id, id), eq(diagrams.visibility, 'public')))
+        .limit(1),
+    ),
+
+  setVisibility: async (id: string, visibility: Visibility) =>
+    firstOrThrow(
+      await updateById(id, { visibility }).returning({ visibility: diagrams.visibility }),
+    ),
+
+  findContentById: async (id: string) =>
+    firstOrNull(
+      await db
+        .select({
+          id: diagrams.id,
+          title: diagrams.title,
+          ownerId: diagrams.ownerId,
+          visibility: diagrams.visibility,
+          version: diagrams.version,
+          nodes: diagrams.nodes,
+          edges: diagrams.edges,
+        })
+        .from(diagrams)
+        .where(eq(diagrams.id, id))
+        .limit(1),
+    ),
+
+  saveContent: async (id: string, data: DiagramContent): Promise<void> => {
+    firstOrThrow(await updateById(id, data).returning(DIAGRAM_ID_COLUMN));
+  },
+
+  rename: async (id: string, title: string): Promise<void> => {
+    firstOrThrow(await updateById(id, { title }).returning(DIAGRAM_ID_COLUMN));
+  },
+
+  setThumbnail: async (
     id: string,
-    data: {
-      title: string;
-      category: string | null;
-      tags: string[];
-      visibility: 'public' | 'private';
-    },
-  ) => db.diagram.update({ where: { id }, data, select: DIAGRAM_CARD_SELECT }),
-
-  remove: (id: string) => db.diagram.delete({ where: { id } }),
-
-  setFavorite: (id: string, isFavorite: boolean) =>
-    db.diagram.update({ where: { id }, data: { isFavorite }, select: DIAGRAM_CARD_SELECT }),
-
-  findPublicById: (id: string) =>
-    db.diagram.findFirst({
-      where: { id, visibility: 'public' },
-      select: { id: true, title: true, nodes: true, edges: true },
-    }),
-
-  setVisibility: (id: string, visibility: 'public' | 'private') =>
-    db.diagram.update({ where: { id }, data: { visibility }, select: { visibility: true } }),
-
-  findContentById: (id: string) =>
-    db.diagram.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        title: true,
-        ownerId: true,
-        visibility: true,
-        version: true,
-        nodes: true,
-        edges: true,
-      },
-    }),
-
-  saveContent: (id: string, data: { nodes: JsonValue; edges: JsonValue }) =>
-    db.diagram.update({ where: { id }, data }),
-
-  rename: (id: string, title: string) => db.diagram.update({ where: { id }, data: { title } }),
-
-  setThumbnail: (id: string, thumbnail: { light: string | null; dark: string | null }) =>
-    db.diagram.update({
-      where: { id },
-      data: { thumbnailLight: thumbnail.light, thumbnailDark: thumbnail.dark },
-    }),
+    thumbnail: { light: string | null; dark: string | null },
+  ): Promise<void> => {
+    firstOrThrow(
+      await updateById(id, {
+        thumbnailLight: thumbnail.light,
+        thumbnailDark: thumbnail.dark,
+      }).returning(DIAGRAM_ID_COLUMN),
+    );
+  },
 };
