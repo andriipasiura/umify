@@ -91,6 +91,56 @@ describe('load', () => {
     expect(past).toHaveLength(0);
     expect(future).toHaveLength(0);
   });
+
+  test('can load content as dirty for diagrams that are not saved yet', () => {
+    useDiagramStore.getState().load({ nodes: [uc], edges: [] }, { dirty: true });
+    expect(useDiagramStore.getState().dirty).toBe(true);
+  });
+});
+
+describe('dirty tracking for React Flow changes', () => {
+  const loadClean = () => {
+    useDiagramStore.getState().load({ nodes: [actor, uc], edges: [] });
+    expect(useDiagramStore.getState().dirty).toBe(false);
+  };
+
+  test('measuring nodes on mount does not mark the diagram dirty', () => {
+    loadClean();
+    useDiagramStore.getState().onNodesChange([
+      { id: 'a1', type: 'dimensions', dimensions: { width: 88, height: 110 } },
+      { id: 'uc1', type: 'dimensions', dimensions: { width: 144, height: 56 } },
+    ]);
+    expect(useDiagramStore.getState().dirty).toBe(false);
+  });
+
+  test('selecting nodes or edges does not mark the diagram dirty', () => {
+    loadClean();
+    useDiagramStore.getState().onNodesChange([{ id: 'a1', type: 'select', selected: true }]);
+    useDiagramStore.getState().onEdgesChange([{ id: 'e1', type: 'select', selected: true }]);
+    expect(useDiagramStore.getState().dirty).toBe(false);
+  });
+
+  test('moving a node marks the diagram dirty', () => {
+    loadClean();
+    useDiagramStore
+      .getState()
+      .onNodesChange([{ id: 'a1', type: 'position', position: { x: 10, y: 10 }, dragging: true }]);
+    expect(useDiagramStore.getState().dirty).toBe(true);
+  });
+
+  test('resizing a node marks the diagram dirty', () => {
+    loadClean();
+    useDiagramStore.getState().onNodesChange([
+      {
+        id: 'uc1',
+        type: 'dimensions',
+        dimensions: { width: 200, height: 80 },
+        resizing: true,
+        setAttributes: true,
+      },
+    ]);
+    expect(useDiagramStore.getState().dirty).toBe(true);
+  });
 });
 
 describe('markSaved', () => {

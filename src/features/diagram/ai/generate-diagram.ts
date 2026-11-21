@@ -17,6 +17,7 @@ const TEMPERATURE = 0.2;
 const MAX_OUTPUT_TOKENS = 2000;
 const ATTEMPT_TIMEOUT_MS = 30_000;
 const DEFAULT_REJECTION = 'The text does not describe a system to model.';
+const FALLBACK_TITLE = 'Untitled diagram';
 
 export type AttemptLog = {
   attempt: 1 | 2;
@@ -71,7 +72,7 @@ const evaluateOutput = (diagram: GeneratedDiagram): AttemptResult => {
   return {
     final: {
       ok: true,
-      title: validation.diagram.systemName,
+      title: validation.diagram.systemName || FALLBACK_TITLE,
       content: generatedToDiagramContent(validation.diagram),
     },
     outcome: 'ok',

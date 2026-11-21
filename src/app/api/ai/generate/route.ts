@@ -1,21 +1,10 @@
-import * as z from 'zod';
-
 import { auth } from '@/auth';
 import { diagramModel } from '@/features/diagram/ai/diagram-model';
+import { generateRequestSchema } from '@/features/diagram/ai/generate-api.schema';
 import { generateDiagram } from '@/features/diagram/ai/generate-diagram';
 import { consumeRateLimit } from '@/lib/rate-limit';
 
-const DESCRIPTION_MIN = 20;
-const DESCRIPTION_MAX = 2000;
 const RATE_LIMIT = { limit: 10, windowMs: 60 * 60 * 1000 };
-
-const requestSchema = z.object({
-  description: z
-    .string({ error: 'Description is required.' })
-    .trim()
-    .min(DESCRIPTION_MIN, `Description must be at least ${DESCRIPTION_MIN} characters.`)
-    .max(DESCRIPTION_MAX, `Description must be at most ${DESCRIPTION_MAX} characters.`),
-});
 
 const errorResponse = (
   status: number,
@@ -25,12 +14,12 @@ const errorResponse = (
   headers?: HeadersInit,
 ) => Response.json({ error, message, ...extra }, { status, headers });
 
-export async function POST(req: Request) {
+const handleGenerate = async (req: Request): Promise<Response> => {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return errorResponse(401, 'unauthorized', 'Sign in to generate diagrams.');
 
-  const parsed = requestSchema.safeParse(await req.json().catch(() => null));
+  const parsed = generateRequestSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
     return errorResponse(
       400,
@@ -77,5 +66,14 @@ export async function POST(req: Request) {
         'provider_error',
         'The AI service is unavailable right now. Try again later.',
       );
+  }
+};
+
+export async function POST(req: Request) {
+  try {
+    return await handleGenerate(req);
+  } catch (error) {
+    console.error('[ai/generate] unexpected error', error);
+    return errorResponse(500, 'internal_error', 'Something went wrong. Try again.');
   }
 }
