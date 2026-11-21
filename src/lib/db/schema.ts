@@ -94,3 +94,13 @@ export const diagrams = pgTable(
     index('Diagram_ownerId_visibility_idx').on(table.ownerId, table.visibility),
   ],
 );
+
+export const rateLimits = pgTable(
+  'RateLimit',
+  {
+    key: text().notNull(),
+    windowStart: dateTime().notNull(),
+    count: integer().notNull().default(0),
+  },
+  (table) => [primaryKey({ name: 'RateLimit_pkey', columns: [table.key, table.windowStart] })],
+);

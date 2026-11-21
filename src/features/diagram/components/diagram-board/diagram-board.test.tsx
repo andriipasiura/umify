@@ -3,6 +3,8 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { render, screen } from '@/test/render';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 vi.mock('@/features/diagram/server/diagram.actions', () => ({
   createDiagram: vi.fn().mockResolvedValue({ ok: true, data: { id: 'new_id' } }),
   updateDiagramMeta: vi.fn().mockResolvedValue({ ok: true, data: { id: 'd1' } }),
@@ -38,6 +40,19 @@ describe('DiagramBoard', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create Diagram' }));
     expect(screen.getByRole('dialog', { name: 'Create Diagram' })).toBeInTheDocument();
+  });
+
+  test('generate card opens the AI generation dialog', async () => {
+    const user = userEvent.setup();
+    render(<DiagramBoard diagrams={[]} />);
+
+    await user.click(screen.getByRole('button', { name: 'Generate with AI' }));
+    expect(screen.getByRole('dialog', { name: 'Generate with AI' })).toBeInTheDocument();
+  });
+
+  test('favorites board has no create or generate cards', () => {
+    render(<DiagramBoard diagrams={[]} variant="favorites" />);
+    expect(screen.queryByRole('button', { name: 'Generate with AI' })).not.toBeInTheDocument();
   });
 
   test('create card is always enabled', () => {

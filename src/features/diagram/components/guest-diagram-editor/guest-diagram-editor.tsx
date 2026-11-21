@@ -1,7 +1,7 @@
 'use client';
 
 import { Download, Share2 } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useState } from 'react';
 
 import { UmifyMark } from '@/components/icons/umify-mark';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { DiagramZoomControlsPanel } from '@/features/diagram/components/diagram-
 import { GuestSignInDialog } from '@/features/diagram/components/guest-sign-in-dialog';
 import { useEditorShortcuts } from '@/features/diagram/hooks/use-editor-shortcuts';
 import { useGuestDiagram } from '@/features/diagram/hooks/use-guest-diagram';
+import { useSaveShortcut } from '@/features/diagram/hooks/use-save-shortcut';
 
 type GuestDiagramEditorProps = {
   signInSlot: ReactNode;
@@ -27,17 +28,7 @@ export const GuestDiagramEditor = ({ signInSlot }: GuestDiagramEditorProps) => {
     setDialogOpen(true);
   }, [flush]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
-        e.preventDefault();
-        promptSignIn();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [promptSignIn]);
+  useSaveShortcut(promptSignIn);
 
   return (
     <div className="flex h-full w-full flex-col">

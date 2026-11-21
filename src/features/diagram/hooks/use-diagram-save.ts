@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { useSaveShortcut } from '@/features/diagram/hooks/use-save-shortcut';
 import { captureThumbnail } from '@/features/diagram/lib/capture-thumbnail';
 import { toDiagramContent } from '@/features/diagram/lib/serialize-content';
 import {
@@ -81,17 +82,7 @@ export const useDiagramSave = (id: string): UseDiagramSaveResult => {
     return () => clearTimeout(timer);
   }, [autoSave, dirty, saving, autoSaveInterval, saveNow]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
-        e.preventDefault();
-        void saveNow();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [saveNow]);
+  useSaveShortcut(saveNow);
 
   const status = deriveStatus(saving, failed, dirty);
 

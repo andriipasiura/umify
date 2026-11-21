@@ -36,7 +36,7 @@ type DiagramActions = {
   deleteEdge: (id: string) => void;
   undo: () => void;
   redo: () => void;
-  load: (snapshot: Snapshot) => void;
+  load: (snapshot: Snapshot, options?: { dirty?: boolean }) => void;
   markSaved: () => void;
   setActiveRelation: (relation: UmlRelation) => void;
 };
@@ -45,6 +45,12 @@ const takeSnapshot = (s: DiagramState): Snapshot => ({
   nodes: current(s.nodes),
   edges: current(s.edges),
 });
+
+const editsContent = (c: NodeChange<UmlNode> | EdgeChange<UmlEdge>) => {
+  if (c.type === 'select') return false;
+  if (c.type === 'dimensions') return Boolean(c.setAttributes);
+  return true;
+};
 
 const commit = (s: DiagramState) => {
   s.past.push(takeSnapshot(s));
@@ -67,7 +73,7 @@ export const useDiagramStore = create<DiagramState & DiagramActions>()(
         const structural = changes.some((c) => c.type === 'remove');
         if (structural) commit(s);
         s.nodes = applyNodeChanges(changes, s.nodes);
-        if (!structural) s.dirty = true;
+        if (!structural && changes.some(editsContent)) s.dirty = true;
       }),
 
     onEdgesChange: (changes) =>
@@ -75,7 +81,7 @@ export const useDiagramStore = create<DiagramState & DiagramActions>()(
         const structural = changes.some((c) => c.type === 'remove');
         if (structural) commit(s);
         s.edges = applyEdgeChanges(changes, s.edges);
-        if (!structural) s.dirty = true;
+        if (!structural && changes.some(editsContent)) s.dirty = true;
       }),
 
     onConnect: (connection) =>
@@ -137,13 +143,13 @@ export const useDiagramStore = create<DiagramState & DiagramActions>()(
         s.dirty = true;
       }),
 
-    load: (snap) =>
+    load: (snap, options) =>
       set((s) => {
         s.nodes = snap.nodes;
         s.edges = snap.edges;
         s.past = [];
         s.future = [];
-        s.dirty = false;
+        s.dirty = options?.dirty ?? false;
       }),
 
     markSaved: () =>

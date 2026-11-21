@@ -1,4 +1,5 @@
 import { Plus } from 'lucide-react';
+import { type ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -7,15 +8,24 @@ const SUBTITLE = 'Start a new use case diagram from a blank canvas';
 
 type CreateDiagramCardProps = {
   onClick?: () => void;
+  title?: string;
+  subtitle?: string;
+  icon?: ReactNode;
   className?: string;
 };
 
-export const CreateDiagramCard = ({ onClick, className }: CreateDiagramCardProps) => (
+export const CreateDiagramCard = ({
+  onClick,
+  title = TITLE,
+  subtitle = SUBTITLE,
+  icon = <Plus className="size-5" />,
+  className,
+}: CreateDiagramCardProps) => (
   <button
     type="button"
     onClick={onClick}
     disabled={!onClick}
-    aria-label={TITLE}
+    aria-label={title}
     className={cn(
       'group/card text-card-foreground border-border flex h-full min-h-52 cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed p-6 text-center transition-colors',
       'hover:border-primary hover:bg-accent/40 focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
@@ -24,11 +34,11 @@ export const CreateDiagramCard = ({ onClick, className }: CreateDiagramCardProps
     )}
   >
     <span className="bg-muted text-muted-foreground group-hover/card:text-primary flex size-11 items-center justify-center rounded-full transition-colors">
-      <Plus className="size-5" />
+      {icon}
     </span>
     <span className="flex flex-col gap-1">
-      <span className="font-heading text-base font-medium">{TITLE}</span>
-      <span className="text-muted-foreground text-xs">{SUBTITLE}</span>
+      <span className="font-heading text-base font-medium">{title}</span>
+      <span className="text-muted-foreground text-xs">{subtitle}</span>
     </span>
   </button>
 );

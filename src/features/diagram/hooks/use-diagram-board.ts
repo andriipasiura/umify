@@ -36,11 +36,15 @@ export const useDiagramBoard = (
   const [isPending, startTransition] = useTransition();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [editing, setEditing] = useState<DiagramCardData | null>(null);
   const [deleting, setDeleting] = useState<DiagramCardData | null>(null);
 
   const openCreate = useCallback(() => setIsCreateOpen(true), []);
   const closeCreate = useCallback(() => setIsCreateOpen(false), []);
+
+  const openGenerate = useCallback(() => setIsGenerateOpen(true), []);
+  const closeGenerate = useCallback(() => setIsGenerateOpen(false), []);
 
   const openEdit = useCallback((diagram: DiagramCardData) => setEditing(diagram), []);
   const closeEdit = useCallback(() => setEditing(null), []);
@@ -75,10 +79,13 @@ export const useDiagramBoard = (
     diagrams: optimisticDiagrams,
     isPending,
     isCreateOpen,
+    isGenerateOpen,
     editing,
     deleting,
     openCreate,
     closeCreate,
+    openGenerate,
+    closeGenerate,
     openEdit,
     closeEdit,
     openDelete,
