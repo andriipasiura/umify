@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 describe('toGenerateError', () => {
-  test('uses the server message and details for 422', () => {
+  test('keeps the message and every detail for invalid_diagram', () => {
     expect(
       toGenerateError(422, {
         error: 'invalid_diagram',
@@ -21,33 +21,52 @@ describe('toGenerateError', () => {
         details: ['Relation include "A" → "B": "A" is an actor.'],
       }),
     ).toEqual({
-      title: 'Could not build a diagram',
+      kind: 'invalid_diagram',
       message: 'The AI could not produce a valid diagram.',
       details: ['Relation include "A" → "B": "A" is an actor.'],
+      retryAt: null,
     });
   });
 
   test.each([
-    [400, 'Check your description'],
-    [429, 'Limit reached'],
-    [502, 'AI service unavailable'],
-  ])('titles status %i as "%s"', (status, title) => {
-    expect(toGenerateError(status, { error: 'x', message: 'Server says no.' })).toEqual({
-      title,
+    [400, 'invalid_input', 'invalid_input'],
+    [422, 'not_a_system', 'not_a_system'],
+    [502, 'provider_error', 'provider_error'],
+    [500, 'internal_error', 'unknown'],
+  ])('maps status %i with code %s to kind %s', (status, code, kind) => {
+    expect(toGenerateError(status, { error: code, message: 'Server says no.' })).toMatchObject({
+      kind,
       message: 'Server says no.',
-      details: [],
     });
   });
 
+  test('computes the retry time for 429 from the body', () => {
+    const error = toGenerateError(
+      429,
+      { error: 'rate_limited', message: 'Limit.', retryAfterSeconds: 120 },
+      { now: 1_000 },
+    );
+    expect(error).toMatchObject({ kind: 'rate_limited', retryAt: 121_000 });
+  });
+
+  test('falls back to the Retry-After header for 429', () => {
+    const error = toGenerateError(429, null, { retryAfterHeader: '60', now: 0 });
+    expect(error.retryAt).toBe(60_000);
+  });
+
   test('asks the user to sign in again on 401', () => {
-    expect(toGenerateError(401, null).message).toBe('Sign in again to generate diagrams.');
+    expect(toGenerateError(401, null)).toMatchObject({
+      kind: 'unauthorized',
+      message: 'Sign in again to generate diagrams.',
+    });
   });
 
   test('falls back to a generic message for unexpected bodies', () => {
     expect(toGenerateError(500, '<html>')).toEqual({
-      title: 'Something went wrong',
+      kind: 'unknown',
       message: 'Generation failed. Try again.',
       details: [],
+      retryAt: null,
     });
   });
 });
@@ -92,9 +111,10 @@ describe('useGenerateDiagram', () => {
     });
 
     expect(result.current.error).toEqual({
-      title: 'Could not build a diagram',
+      kind: 'not_a_system',
       message: 'This is a poem.',
       details: [],
+      retryAt: null,
     });
   });
 
@@ -106,7 +126,7 @@ describe('useGenerateDiagram', () => {
       await result.current.generate('An online bookstore for customers');
     });
 
-    expect(result.current.error?.title).toBe('Network error');
+    expect(result.current.error?.kind).toBe('network');
   });
 
   test('cancel aborts the request without showing an error', async () => {
@@ -136,5 +156,35 @@ describe('useGenerateDiagram', () => {
 
     expect(result.current.pending).toBe(false);
     expect(result.current.error).toBeNull();
+  });
+
+  test('ignores a second call while a request is in flight', async () => {
+    let resolveFetch!: (response: Response) => void;
+    const fetchMock = vi.fn(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { result } = renderHook(() => useGenerateDiagram());
+    let first: Promise<unknown> = Promise.resolve();
+    let second: unknown;
+    act(() => {
+      first = result.current.generate('An online bookstore for customers');
+    });
+    await act(async () => {
+      second = await result.current.generate('An online bookstore for customers');
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(second).toBeNull();
+
+    await act(async () => {
+      resolveFetch(jsonResponse(200, { title: 'Bookstore', content: EMPTY_DIAGRAM_CONTENT }));
+      await first;
+    });
+    expect(result.current.pending).toBe(false);
   });
 });

@@ -11,6 +11,7 @@ import {
   ReactFlow,
   ReactFlowProvider,
 } from '@xyflow/react';
+import { type CSSProperties, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { DiagramToolbar } from '@/features/diagram/components/diagram-toolbar';
@@ -25,12 +26,21 @@ import { miniMapNodeColor } from '@/features/diagram/lib/minimap-node-color';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
 import { useEditorStore } from '@/features/diagram/store/editor-store';
 import { UML_EDGE_TYPE, type UmlNode } from '@/features/diagram/types';
+import { cn } from '@/lib/utils';
+
+const withEnterAnimation = (nodes: UmlNode[]): UmlNode[] =>
+  nodes.map((node, index) => ({
+    ...node,
+    className: cn(node.className, 'diagram-node-enter'),
+    style: { ...node.style, '--enter-index': index } as CSSProperties,
+  }));
 
 type DiagramCanvasProps = {
   topLeftPanel?: React.ReactNode;
   topCenterPanel?: React.ReactNode;
   topRightPanel?: React.ReactNode;
   bottomLeftPanel?: React.ReactNode;
+  entering?: boolean;
 };
 
 const DiagramCanvasInner = ({
@@ -38,6 +48,7 @@ const DiagramCanvasInner = ({
   topCenterPanel,
   topRightPanel,
   bottomLeftPanel,
+  entering = false,
 }: DiagramCanvasProps) => {
   const {
     nodes,
@@ -82,13 +93,16 @@ const DiagramCanvasInner = ({
     selectionOnDrag,
   } = useDiagramInteractions();
 
-  const layeredNodes = layerBoundariesFirst(nodes);
+  const renderedNodes = useMemo(() => {
+    const layered = layerBoundariesFirst(nodes);
+    return entering ? withEnterAnimation(layered) : layered;
+  }, [nodes, entering]);
 
   return (
-    <div className="h-full w-full" data-diagram-capture-root>
+    <div className={cn('h-full w-full', entering && 'diagram-entering')} data-diagram-capture-root>
       <UmlMarkers />
       <ReactFlow
-        nodes={layeredNodes}
+        nodes={renderedNodes}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}

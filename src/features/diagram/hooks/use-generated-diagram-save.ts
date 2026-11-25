@@ -14,6 +14,7 @@ import {
   saveDiagramThumbnail,
 } from '@/features/diagram/server/diagram.actions';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
+import { useGenerateDraftStore } from '@/features/diagram/store/generate-draft-store';
 import { routes } from '@/lib/routes';
 
 type UseGeneratedDiagramSaveResult = {
@@ -50,6 +51,7 @@ export const useGeneratedDiagramSave = (title: string): UseGeneratedDiagramSaveR
 
       markSaved();
       clearGeneratedDiagram();
+      useGenerateDraftStore.getState().clear();
       router.replace(routes.diagram(result.data.id));
     } catch {
       setFailed(true);
