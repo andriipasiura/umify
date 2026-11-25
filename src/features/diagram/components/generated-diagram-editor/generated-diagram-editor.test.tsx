@@ -2,7 +2,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const replace = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace }) }));
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace }) }));
 
 const importGuestDiagram = vi.fn();
 vi.mock('@/features/diagram/server/diagram.actions', () => ({
@@ -47,6 +48,7 @@ import {
 } from '@/features/diagram/lib/generated-diagram-storage';
 import { type DiagramContent } from '@/features/diagram/schema/diagram-content';
 import { useDiagramStore } from '@/features/diagram/store/diagram-store';
+import { useGenerateDraftStore } from '@/features/diagram/store/generate-draft-store';
 import { render, screen } from '@/test/render';
 
 import { GeneratedDiagramEditor } from './generated-diagram-editor';
@@ -68,6 +70,9 @@ beforeEach(() => {
   window.sessionStorage.clear();
   useDiagramStore.getState().load({ nodes: [], edges: [] });
   importGuestDiagram.mockReset();
+  push.mockReset();
+  replace.mockReset();
+  useGenerateDraftStore.setState({ description: '' });
 });
 
 describe('GeneratedDiagramEditor', () => {
@@ -92,7 +97,7 @@ describe('GeneratedDiagramEditor', () => {
     writeGeneratedDiagram({ title: 'Bookstore', content });
     render(<GeneratedDiagramEditor />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Save diagram' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }));
 
     await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/diagrams/saved_id'));
     expect(importGuestDiagram).toHaveBeenCalledWith({
@@ -108,10 +113,63 @@ describe('GeneratedDiagramEditor', () => {
     writeGeneratedDiagram({ title: 'Bookstore', content });
     render(<GeneratedDiagramEditor />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Save diagram' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Save' }));
 
     expect(await screen.findByText('Save failed — click to retry')).toBeInTheDocument();
     expect(readGeneratedDiagram()).not.toBeNull();
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  test('shows the AI banner and restores the Save button when it is dismissed', async () => {
+    writeGeneratedDiagram({ title: 'Bookstore', content });
+    render(<GeneratedDiagramEditor />);
+
+    expect(await screen.findByText('Generated with AI.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save diagram' })).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Dismiss banner' }));
+
+    expect(screen.queryByText('Generated with AI.')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Save diagram' })).toBeInTheDocument();
+  });
+
+  test('discards the draft after confirmation', async () => {
+    useGenerateDraftStore.setState({ description: 'An online bookstore for customers' });
+    writeGeneratedDiagram({ title: 'Bookstore', content });
+    render(<GeneratedDiagramEditor />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Discard' }));
+    expect(screen.getByText('Discard generated diagram?')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Discard' }));
+
+    expect(push).toHaveBeenCalledWith('/');
+    expect(readGeneratedDiagram()).toBeNull();
+    expect(useDiagramStore.getState().dirty).toBe(false);
+    expect(useGenerateDraftStore.getState().description).toBe('');
+  });
+
+  test('reopens the generate dialog with the same description', async () => {
+    useGenerateDraftStore.setState({ description: 'An online bookstore for customers' });
+    writeGeneratedDiagram({ title: 'Bookstore', content });
+    render(<GeneratedDiagramEditor />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Regenerate' }));
+
+    expect(await screen.findByLabelText('System description')).toHaveValue(
+      'An online bookstore for customers',
+    );
+    expect(screen.getByText(/replaces the current diagram/)).toBeInTheDocument();
+  });
+
+  test('persists edits so a reload restores them', async () => {
+    writeGeneratedDiagram({ title: 'Bookstore', content });
+    render(<GeneratedDiagramEditor />);
+    await screen.findByText('Bookstore');
+
+    useDiagramStore.getState().updateNodeLabel('a1', 'Shopper');
+
+    await vi.waitFor(() =>
+      expect(readGeneratedDiagram()?.content.nodes[0].data.label).toBe('Shopper'),
+    );
   });
 });

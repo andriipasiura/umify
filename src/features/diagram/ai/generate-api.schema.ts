@@ -26,4 +26,5 @@ export const generateErrorSchema = z.object({
   error: z.string(),
   message: z.string(),
   details: z.array(z.string()).optional(),
+  retryAfterSeconds: z.number().optional(),
 });

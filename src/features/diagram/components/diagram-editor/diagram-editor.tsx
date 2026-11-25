@@ -48,9 +48,7 @@ export const DiagramEditor = ({ id, title, visibility, nodes, edges }: DiagramEd
       <DiagramTopbar
         leftSlot={
           <Button asChild variant="ghost" size="sm">
-            <Link href={routes.home} onClick={leaveGuard.onBackClick}>
-              ← All diagrams
-            </Link>
+            <Link href={routes.home}>← All diagrams</Link>
           </Button>
         }
         rightSlot={<ThemeToggle className="ml-auto" />}

@@ -1,5 +1,4 @@
 import { act, renderHook } from '@testing-library/react';
-import type { MouseEvent as ReactMouseEvent } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const { pushMock } = vi.hoisted(() => ({
@@ -23,16 +22,26 @@ const makeNode = (id: string): UmlNode =>
     data: { kind: 'actor', label: id },
   }) as UmlNode;
 
-const makeClickEvent = (overrides: Partial<ReactMouseEvent<HTMLAnchorElement>> = {}) =>
-  ({
-    preventDefault: vi.fn(),
-    metaKey: false,
-    ctrlKey: false,
-    shiftKey: false,
-    altKey: false,
-    button: 0,
-    ...overrides,
-  }) as unknown as ReactMouseEvent<HTMLAnchorElement>;
+const clickLink = (href: string, init: MouseEventInit = {}, attrs: Record<string, string> = {}) => {
+  const anchor = document.createElement('a');
+  anchor.href = href;
+  anchor.textContent = 'link';
+  for (const [name, value] of Object.entries(attrs)) anchor.setAttribute(name, value);
+  document.body.append(anchor);
+  const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ...init });
+  let reachedPage: boolean | null = null;
+  const settle = (e: Event) => {
+    reachedPage = !e.defaultPrevented;
+    e.preventDefault();
+  };
+  window.addEventListener('click', settle);
+  act(() => {
+    anchor.dispatchEvent(event);
+  });
+  window.removeEventListener('click', settle);
+  anchor.remove();
+  return { defaultPrevented: reachedPage === null ? event.defaultPrevented : !reachedPage };
+};
 
 beforeEach(() => {
   useDiagramStore.getState().load({ nodes: [], edges: [] });
@@ -40,44 +49,51 @@ beforeEach(() => {
 });
 
 describe('useLeaveGuard', () => {
-  test('onBackClick does nothing when the store is clean', () => {
-    const saveNow = vi.fn().mockResolvedValue(undefined);
-    const { result } = renderHook(() => useLeaveGuard(saveNow));
-    const event = makeClickEvent();
+  test('lets links through when the store is clean', () => {
+    renderHook(() => useLeaveGuard(vi.fn().mockResolvedValue(undefined)));
 
-    act(() => result.current.onBackClick(event));
-
-    expect(event.preventDefault).not.toHaveBeenCalled();
-    expect(result.current.open).toBe(false);
+    expect(clickLink('/favorites').defaultPrevented).toBe(false);
   });
 
-  test('onBackClick opens the dialog when the store is dirty', () => {
+  test('intercepts an internal link and opens the dialog when the store is dirty', () => {
     useDiagramStore.getState().addNode(makeNode('n1'));
-    const saveNow = vi.fn().mockResolvedValue(undefined);
-    const { result } = renderHook(() => useLeaveGuard(saveNow));
-    const event = makeClickEvent();
+    const { result } = renderHook(() => useLeaveGuard(vi.fn().mockResolvedValue(undefined)));
 
-    act(() => result.current.onBackClick(event));
-
-    expect(event.preventDefault).toHaveBeenCalled();
+    expect(clickLink('/favorites').defaultPrevented).toBe(true);
     expect(result.current.open).toBe(true);
   });
 
-  test.each([
-    ['metaKey', { metaKey: true }],
-    ['ctrlKey', { ctrlKey: true }],
-    ['shiftKey', { shiftKey: true }],
-    ['altKey', { altKey: true }],
-    ['non-primary button', { button: 1 }],
-  ])('onBackClick lets the browser handle it when %s is set', (_label, overrides) => {
+  test('onLeave goes to the intercepted link target', () => {
     useDiagramStore.getState().addNode(makeNode('n1'));
-    const saveNow = vi.fn().mockResolvedValue(undefined);
-    const { result } = renderHook(() => useLeaveGuard(saveNow));
-    const event = makeClickEvent(overrides);
+    const { result } = renderHook(() => useLeaveGuard(vi.fn().mockResolvedValue(undefined)));
 
-    act(() => result.current.onBackClick(event));
+    clickLink('/settings?tab=profile');
+    act(() => result.current.onLeave());
 
-    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(pushMock).toHaveBeenCalledWith('/settings?tab=profile');
+  });
+
+  test.each([
+    ['metaKey', { metaKey: true }, {}],
+    ['ctrlKey', { ctrlKey: true }, {}],
+    ['shiftKey', { shiftKey: true }, {}],
+    ['altKey', { altKey: true }, {}],
+    ['non-primary button', { button: 1 }, {}],
+    ['target="_blank"', {}, { target: '_blank' }],
+    ['download', {}, { download: '' }],
+  ])('lets the browser handle a link when %s is set', (_label, init, attrs) => {
+    useDiagramStore.getState().addNode(makeNode('n1'));
+    const { result } = renderHook(() => useLeaveGuard(vi.fn().mockResolvedValue(undefined)));
+
+    expect(clickLink('/favorites', init, attrs).defaultPrevented).toBe(false);
+    expect(result.current.open).toBe(false);
+  });
+
+  test('ignores external links', () => {
+    useDiagramStore.getState().addNode(makeNode('n1'));
+    const { result } = renderHook(() => useLeaveGuard(vi.fn().mockResolvedValue(undefined)));
+
+    clickLink('https://example.com/docs');
     expect(result.current.open).toBe(false);
   });
 
@@ -86,7 +102,7 @@ describe('useLeaveGuard', () => {
     const saveNow = vi.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() => useLeaveGuard(saveNow));
 
-    act(() => result.current.onBackClick(makeClickEvent()));
+    clickLink('/favorites');
     act(() => result.current.onCancel());
 
     expect(result.current.open).toBe(false);
@@ -125,7 +141,7 @@ describe('useLeaveGuard', () => {
     const saveNow = vi.fn().mockResolvedValue(undefined);
     const { result } = renderHook(() => useLeaveGuard(saveNow));
 
-    act(() => result.current.onBackClick(makeClickEvent()));
+    clickLink('/favorites');
 
     await act(async () => {
       await result.current.onSaveAndLeave();
